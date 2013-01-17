@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="760" minHeight="600" width="760" height="600" 
+			   creationComplete="mainAPP(event)">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import net.*;
+			import com.common.SimFun;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;			
+			
+			public var loadModules:MainPM;
+			
+			//配置信息
+			public var game_init:XML;
+			public var g_i_comefrom:Number; //来源
+			public var g_i_webtogame:String;
+			public var g_i_gametoweb:String;			
+			public var g_i_registurl:String;
+			public var g_i_weburl:String;
+			public var g_i_bbsurl:String;
+			public var g_i_payurl:String;
+			public var g_i_serverip:String;
+			public var g_i_serverport:int;
+			
+			//自己的信息
+			[Bindable]public var myself_uid:Number = 0;
+			[Bindable]public var myself_username:String = ""; //用户名
+			[Bindable]public var myself_usertype:Number = 0; //来源		
+			//当前查询的用户的uid
+			public var current_show_uid:Number = 0;
+			//当前查询的用户信息			
+			[Bindable]public var show_rolename:String = ""; //角色名			
+			[Bindable]public var show_sex:Number = 0; //性别
+			[Bindable]public var show_picture:String = ""; //头像
+			[Bindable]public var show_rank:Number = 0; //等级
+			[Bindable]public var show_exp:Number = 0; //经验			
+			[Bindable]public var show_asse:Number = 0; //资产
+			[Bindable]public var show_cash:Number = 0; //现金
+			[Bindable]public var show_desi:String = ""; //称号
+			[Bindable]public var show_luck:Number = 0; //运气指数
+			[Bindable]public var show_order:Number = 9999; //排名
+			[Bindable]public var show_weather:Number = 1; //天气
+			
+			
+			public function mainAPP(event:FlexEvent):void
+			{
+				//hack code
+				PopUpManager;Alert;	
+				
+				//打开挡板,连接服务器
+				onProgessShow.visible = true;
+				onProgessPercent.text = "...";
+				onProgessText.text = "读取配置信息...";	
+				loadModules = new MainPM(moduleContainer,onProgessShow,onProgessPercent,onProgessText);				
+				
+				//读取配置信息
+				getGameInit();
+				
+				
+				//返回:uid,flag: 1正常 0没有创建角色 2强制下线
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USER_LOGIN,		loginCallBack);				
+				//退出登录
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USER_LOGOUT,		loginOutCallBack);
+				//获取完了用户信息，可以玩游戏了
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SEND_ENDED,		getUserMessageEndCallBack);
+			}
+			
+			
+			//读取配置信息
+			public function getGameInit():void
+			{
+				SimFun.URLGet("./game_init/game_init.xml", getGameInitCallBack);
+			}
+			
+			
+			public function getGameInitCallBack(event:Event):void
+			{				
+				game_init = new XML(event.currentTarget.data);
+				g_i_comefrom = myself_usertype = Number(game_init.comefrom);
+				g_i_webtogame = game_init.webtogame;
+				g_i_gametoweb = game_init.gametoweb;
+				g_i_registurl = game_init.registurl;
+				g_i_weburl = game_init.weburl;
+				g_i_bbsurl = game_init.bbsurl;
+				g_i_payurl = game_init.payurl;
+				g_i_serverip = game_init.serverip;
+				g_i_serverport = game_init.serverport;
+				
+							
+								
+				onProgessText.text = "连接服务器中...";	
+				
+				new Ccontect(g_i_serverip, g_i_serverport, connectCallBack, closedCallBack, netTimeoutCallBack);
+			}
+			
+			
+			/*获取地址，1：显示登录模块。2：去平台验证*/
+			private function connectCallBack(event:*, target:*):void
+			{
+				var nowURL:String = ExternalInterface.call("window.location.search.substring",1); 
+				if(nowURL == "")
+				{
+					loadModules.loadModule("./modules/loginModule.swf","加载登录模块",ApplicationDomain.currentDomain);
+				}
+				else
+				{
+					//取用户名
+					if(nowURL.indexOf("username=") != -1)
+					{
+						var split_nowurl:Array = nowURL.split("&");
+						for(var i:int=0;i<split_nowurl.length;i++)
+						{
+							if(split_nowurl[i].indexOf("username=") != -1)
+							{
+								var split_username:Array = split_nowurl[i].split("=");
+								myself_username = split_username[1];
+								break;
+							}
+						}
+					}
+					else
+					{
+						myself_username = "";
+					}
+					
+					//把参数发给来源，验证
+					var webtogameURL:String;
+					if(g_i_webtogame.indexOf("?") != -1)
+					{
+						webtogameURL = g_i_webtogame + "&" + nowURL;		
+					}
+					else
+					{
+						webtogameURL = g_i_webtogame + "?" + nowURL;
+					}	
+					SimFun.URLGet(webtogameURL, webtogameHandleCallBack);
+				}
+			}
+			
+			
+			private function closedCallBack(event:*, target:*):void
+			{
+				onProgessText.text = "暂时连接不上服务器...";
+			}
+			
+			
+			private function netTimeoutCallBack(event:*, target:*):void
+			{
+				onProgessText.text = "网络超时...";
+			}
+			
+			
+			/*登录返回，同帐号登录强制下线 */
+			private function loginCallBack(event:*,target:*):void
+			{
+				switch(Number(target.Flag))
+				{
+					case 0://创建角色
+						loadModules.removeAllModule();
+						loadModules.loadModule("./modules/registModule.swf","加载创建角色模块",ApplicationDomain.currentDomain);
+						break;
+					case 1://正常
+						myself_uid = current_show_uid = target.uid;
+						loadMainGame();		
+						break;					
+					case 2://退出
+						loadModules.removeAllModule();
+						onProgessShow.visible = true;
+						onProgessPercent.text = "...";
+						onProgessText.text = "您的帐号在其他地方登录，强制下线...";
+						break;
+				}
+			}
+			
+			
+			//加载主游戏模块
+			public function loadMainGame():void
+			{
+				loadModules.removeAllModule();				
+				loadModules.loadModule("./modules/gameModule.swf","加载主游戏模块",ApplicationDomain.currentDomain);
+			}
+			
+			
+			/*退出登录*/
+			private function loginOutCallBack(event:*,target:*):void
+			{
+				if(target.stat == true && target.target_uid == myself_uid)
+				{
+					loadModules.removeAllModule();
+					loadModules.loadModule("./modules/loginModule.swf","加载登录模块",ApplicationDomain.currentDomain);
+				}
+			}
+			
+			
+			/*获取用户信息完了，消灭挡板*/
+			private function getUserMessageEndCallBack(event:*, target:*):void
+			{
+				if(target.stat == 1)
+				{
+					onProgessPercent.text = "";
+					onProgessText.text = "";
+					onProgessShow.visible = false;
+				}
+			}
+			
+			
+			/*平台登录，跳到游戏，游戏向平台验证，得到的返回 */
+			public function webtogameHandleCallBack(event:Event):void
+			{
+				var loginreturn:XML = new XML(event.currentTarget.data);
+				switch(Number(loginreturn.result))
+				{
+					case 100://成功
+						Ccontect.c2s_login(myself_username,g_i_comefrom);
+						break;
+					case 101://参数错误或不完整						
+					case 102://登录超时						
+					case 103://用户名不存在	
+					case 104://flag错误
+					case 105://密码错误
+					default:
+						loadModules.loadModule("./modules/loginModule.swf","加载登录模块",ApplicationDomain.currentDomain);
+						break;
+				}
+			}
+		]]>
+	</fx:Script>	
+	
+	<!--模块容器-->
+	<s:Group width="760" height="600" id="moduleContainer" />
+	
+	<!--加载进度挡板-->
+	<s:Group width="760" height="600" id="onProgessShow" visible="true">
+		<s:Rect left="0" top="0" width="760" height="600">
+			<s:fill>
+				<mx:SolidColor color="0x000000" alpha="0.5"></mx:SolidColor>
+			</s:fill>		
+		</s:Rect>
+		<s:Label id="onProgessPercent" text="1%" width="327" height="71" fontSize="50" textAlign="center" verticalAlign="middle" color="#FFFFFF" fontFamily="Verdana" x="216.1" y="237.6"/>
+		<s:Label id="onProgessText" text="..." width="358" height="36" fontSize="14" textAlign="center" verticalAlign="middle" color="#FFFFFF" x="200.95" y="316.2"/>		
+	</s:Group>
+</s:Application>

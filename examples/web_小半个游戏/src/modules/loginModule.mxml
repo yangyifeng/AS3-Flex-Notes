@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" layout="absolute" width="760" height="600">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Style source="css/loginModuleCSS.css" />
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import mx.controls.Alert;
+			import mx.utils.StringUtil;
+			
+			import net.*;
+			
+			private var un:String;
+			private var pa:String;						
+			
+			private function login():void
+			{
+				un = StringUtil.trim(username.text);
+				pa = StringUtil.trim(password.text);				
+				if(un == "" || pa =="")
+				{
+					Alert.show("请输入用户名和密码！","温馨提示：");
+				}
+				else
+				{
+					login_btn.enabled = false;
+					regist_btn.enabled = false;
+					login_message.text = "正在登录，请稍等...";
+					
+					
+					/*========== test start 爱逍遥平台出问题了，很难访问，所以去掉到平台验证====================*/
+					this.parentApplication.myself_username = un;
+					Ccontect.c2s_login(un,this.parentApplication.g_i_comefrom);
+					return void;
+					/*========== test end ==================*/
+					
+					
+					
+					//提交到平台验证	
+					var gametowebURL:String;
+					var urlParm:String;
+					var nowtime:Date = new Date();
+					urlParm = "username=" + encodeURI(un) + "&password=" + pa + "&nowtime=" + String(nowtime.getTime() / 1000);
+					if(this.parentApplication.g_i_gametoweb.indexOf("?") != -1)
+					{
+						gametowebURL = this.parentApplication.g_i_gametoweb + "&" + urlParm;		
+					}
+					else
+					{
+						gametowebURL = this.parentApplication.g_i_gametoweb + "?" + urlParm;
+					}
+					SimFun.URLGet(gametowebURL, gametowebURLHandle);
+				}
+			}
+			private function gametowebURLHandle(event:Event):void
+			{
+				login_btn.enabled = true;
+				regist_btn.enabled = true;
+				login_message.text = "";
+				var loginreturn:XML = new XML(event.currentTarget.data);
+				
+				switch(Number(loginreturn.result))
+				{
+					case 100://成功
+						login_message.text = "等待服务器返回，请稍等...";
+						this.parentApplication.myself_username = un;
+						Ccontect.c2s_login(un,this.parentApplication.g_i_comefrom);
+						break;
+					case 101://参数错误或不完整		
+						login_message.text = "参数错误或不完整";
+						break;
+					case 102://登录超时	
+						login_message.text = "登录超时";
+						break;
+					case 103://用户名不存在	
+						login_message.text = "用户名不存在";
+						break;
+					case 105://密码错误
+						login_message.text = "密码错误";
+						break;
+					default:
+						login_message.text = "验证用户服务器超时，请重新登录";
+						break;
+				}
+			}
+			private function regist():void
+			{
+				navigateToURL(new URLRequest(this.parentApplication.g_i_registurl),"_blank");
+			}		
+		]]>
+	</fx:Script>
+	<s:Group width="100%" height="100%">
+		<s:Rect left="0" top="0" width="100%" height="100%">
+			<s:fill>
+				<mx:SolidColor color="0xFFFFFF" alpha="1"></mx:SolidColor>
+			</s:fill>		
+		</s:Rect>
+	</s:Group>
+	
+	<s:Label x="285" y="176" text="用户名:"/>
+	<s:TextInput x="344" y="171" id="username"/>
+	<s:Label x="292" y="219" text="密码:"/>
+	<s:TextInput x="345" y="215" id="password" displayAsPassword="true" enter="login()"/>
+	<s:Button x="304" y="263" label="登录" click="login()" id="login_btn" buttonMode="true"/>
+	<s:Button x="403" y="263" label="注册" click="regist()" id="regist_btn" buttonMode="true"/>	
+	<s:Label x="291" y="308" text="" id="login_message" width="192" height="27" textAlign="center"/>
+</mx:Module>

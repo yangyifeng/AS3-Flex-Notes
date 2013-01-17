@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					   xmlns:s="library://ns.adobe.com/flex/spark"
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   showStatusBar="false"
+					   width="600" height="500" fontSize="13" creationComplete="initApp()">
+
+	<fx:Script>
+		<![CDATA[
+			import flash.data.SQLConnection;
+			import flash.data.SQLStatement;
+			import flash.events.SQLErrorEvent;
+			import flash.events.SQLEvent;
+			import flash.filesystem.File;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			
+			[Bindable]
+			public var dataList:ArrayCollection = new ArrayCollection();
+			
+			private var conn:SQLConnection = new SQLConnection();
+			private var sqlStmt:SQLStatement = new SQLStatement();
+						
+			//定义数据库文件路径
+			private var dbFile:File = File.applicationDirectory.resolvePath("content.db");
+			
+			public function initApp():void
+			{
+				conn.addEventListener(SQLEvent.OPEN, openHandler);				
+				conn.addEventListener(SQLErrorEvent.ERROR, errorHandle);				
+				conn.open(dbFile);
+			}
+			
+			private function openHandler(e:SQLEvent):void
+			{
+				var createStmt:SQLStatement = new SQLStatement();
+				createStmt.sqlConnection = conn;
+				createStmt.text = "CREATE TABLE IF NOT EXISTS Notes ("
+					+ "noteId INTEGER PRIMARY KEY AUTOINCREMENT,"
+					+ "title TEXT,"
+					+ "content TEXT,"
+					+ "publisher TEXT"
+					+ ")";;
+				
+				createStmt.addEventListener(SQLEvent.RESULT, selectData);
+				createStmt.addEventListener(SQLErrorEvent.ERROR, errorHandle);
+				createStmt.execute();
+			}
+			
+			private function selectData(e:SQLEvent):void
+			{				
+				sqlStmt.sqlConnection = conn;
+				sqlStmt.text = "select * from Notes";
+				
+				sqlStmt.addEventListener(SQLEvent.RESULT, showDataResult);
+				sqlStmt.addEventListener(SQLErrorEvent.ERROR, errorHandle);
+				sqlStmt.execute();				 
+			}
+			
+			private function showDataResult(e:SQLEvent):void
+			{
+				var result:SQLResult = sqlStmt.getResult();
+				dataList.removeAll();
+				if(result.data!=null)  
+				{  
+					var numResults:int =result.data.length;  
+					var output:String="";					
+					for (var i:int = 0; i < numResults; i++)   
+					{   
+						var row:Object = result.data[i];   
+						dataList.addItem({noteId:row.noteId, title:row.title, content:row.content, publisher:row.publisher});  
+					} 
+				}
+				btnOk.label = "添加新记录";
+			}
+			
+			private function insertDataHandle():void
+			{
+				var insertStmt:SQLStatement = new SQLStatement();
+				insertStmt.sqlConnection = conn;
+				
+				if(dg.selectedIndex != -1)
+				{
+					insertStmt.text = "update Notes set "
+						+ "title='" + txtTitle.text + "',"
+						+ "content='" + txtContent.text + "',"
+						+ "publisher='" + txtPublisher.text + "'"
+						+ " where noteId=" + dg.selectedItem.noteId;
+					
+					//Alert.show(insertStmt.text);return void;
+				}
+				else
+				{
+					insertStmt.text = "insert into Notes(title, content, publisher) values('"
+						+ txtTitle.text + "','"
+						+ txtContent.text + "','"
+						+ txtPublisher.text + "')";					
+				}
+				
+				insertStmt.addEventListener(SQLEvent.RESULT, selectData);
+				insertStmt.addEventListener(SQLErrorEvent.ERROR, errorHandle);
+				insertStmt.execute();
+				
+				txtTitle.text = "";
+				txtContent.text = "";
+				txtPublisher.text = "";				
+			}
+			
+			private function errorHandle(event:SQLErrorEvent):void
+			{
+				Alert.show('错误提示',event.error.message);
+				Alert.show('详细信息',event.error.details);
+			}
+			
+			private function fillData():void
+			{
+				txtTitle.text = dg.selectedItem.title;
+				txtContent.text = dg.selectedItem.content;
+				txtPublisher.text = dg.selectedItem.publisher;
+				btnOk.label = "修改";
+			}
+			
+			public function delDataHandle():void
+			{
+				if(dg.selectedIndex == -1)
+				{
+					Alert.show("去选一个");
+				}
+				else
+				{
+					Alert.show(dg.selectedItem.title,"是否要删除",Alert.YES|Alert.NO,null,sureDel);					
+				}
+			}
+			public function sureDel(event:CloseEvent):void
+			{
+				if(event.detail == 1)
+				{
+					var delStmt:SQLStatement = new SQLStatement();
+					delStmt.sqlConnection = conn;
+					delStmt.text = "delete from Notes where noteId =" + dg.selectedItem.noteId;
+					
+					delStmt.addEventListener(SQLEvent.RESULT, selectData);
+					delStmt.addEventListener(SQLErrorEvent.ERROR, errorHandle);
+					delStmt.execute();
+				}				
+			}
+		]]>
+	</fx:Script>
+	<s:Panel x="20" y="20" width="560" height="461" title="datagrid及sqlite的使用">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<s:DataGrid id="dg" x="10" y="0" width="558" height="206" dataProvider="{dataList}" selectionChange="fillData()">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="noteId" headerText="编号" sortable="true"></s:GridColumn>
+					<s:GridColumn dataField="title" headerText="标题"></s:GridColumn>
+					<s:GridColumn dataField="content" headerText="内容"></s:GridColumn>
+					<s:GridColumn dataField="publisher" headerText="发布者"></s:GridColumn>
+					<s:GridColumn headerText="删除" >
+						<s:itemRenderer >
+							<fx:Component> 
+								<s:GridItemRenderer>
+									<fx:Script>
+										<![CDATA[
+											private function singeldel(event:MouseEvent):void
+											{
+												if(outerDocument.dg.selectedIndex != -1)
+												{
+													outerDocument.delDataHandle();
+												}
+											}
+										]]>
+									</fx:Script>
+									<mx:LinkButton click="singeldel(event)"
+												   icon="@Embed(source='assets/del.png')"
+												   />
+								</s:GridItemRenderer>
+							</fx:Component>
+						</s:itemRenderer> 
+					</s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+		</s:DataGrid>
+		<s:Group width="557" height="218">
+			<s:Label x="10" y="10" width="58" height="21" text="标题"/>
+			<s:Label x="10" y="39" width="58" height="27" text="内容"/>
+			<s:TextInput id="txtTitle" x="92" y="10" width="455" height="21"/>
+			<s:TextArea id="txtContent" x="92" y="39" width="455" height="99"/>
+			<s:Label x="10" y="149" width="58" height="18" text="发布者"/>
+			<s:TextInput id="txtPublisher" x="92" y="145" width="456" height="35"/>
+			<s:Button id="btnOk" x="92" y="187" label="添加新记录" click="insertDataHandle();"/>			
+			<s:Button x="196" y="188" label="删除选中项" click="delDataHandle()"/>
+		</s:Group>
+	</s:Panel>	
+</s:WindowedApplication>

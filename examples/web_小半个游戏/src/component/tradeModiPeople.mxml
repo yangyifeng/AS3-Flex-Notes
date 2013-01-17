@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" xmlns:compages="compages.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import component.useCard;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			
+			import newSkin.commonBtn;
+			
+			import spark.events.DropDownEvent;
+			
+			[Bindable]public var t_targetCity_arr:ArrayCollection = new ArrayCollection();
+			public var leave_city_info:Object = new Object();
+			public var car_info:Array = new Array();
+			public var t_seat_id:String = "";
+			
+			private function cardUseEffect():void
+			{
+				var useCardShow:useCard = new useCard();
+				useCardShow.card.source = "images/card/xiuli2.gif";
+				SimFun.useCardWindow(useCardShow,this);
+			}
+			private function changeCity(event:DropDownEvent):void
+			{
+				if(String(event.target.selectedItem) != "undefined")
+				{
+					//距离：
+					t_dist.text = event.target.selectedItem.distance + "公里";
+					//运输时间
+					t_time.text = SimFun.secondsToTimeFormat(Math.round(event.target.selectedItem.distance / car_info[7] * 3600));
+					//票价
+					var pj:Number = car_info[14] * event.target.selectedItem.distance;
+					t_buyPrice.text = String(pj) + "元";
+					//人数
+					var rs:Number = Number(t_amount.text);
+					//收入预算  票价*人数
+					var srys:Number = pj * rs;						
+					t_earn.text = String(srys) + "元";
+					//营业税 收入预算*目的地城市税率
+					var yys:Number = srys * event.target.selectedItem.tax * 0.01;
+					t_sui.text = String(yys) + "元";
+					//运输费 起步价+运行费用*里程
+					var ysf:Number = car_info[11] + car_info[12] * event.target.selectedItem.distance;
+					//利润预算  收入预算-运输费-营业税
+					var lrys:Number = srys - ysf - yys;						
+					t_lirun.text = String(lrys) + "元";
+					//利润率 利润预算/成本*100%
+					t_suilv.text = String(Math.round(lrys / ysf * 100)) + "%";
+					
+					createTradeBtn.enabled = true;
+				}
+			}
+			private function changeTargetCity():void
+			{
+				var uid:Number = this.parentApplication.myself_uid;
+				var target_uid:Number = this.parentApplication.current_show_uid;
+				
+				var card_id:Number = 0;
+				var card_amount:Number = 0;
+				var card_name:String = "";
+				//获取改道卡id
+				if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_car_category == 0)
+				{
+					card_id = 17;
+				}
+				else if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_car_category == 1)
+				{
+					card_id = 18;
+				}
+				else if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_car_category == 2)
+				{
+					card_id = 19;
+				}
+				else
+				{
+					card_id = 20;
+				}
+				//获取改道卡数量
+				for(var i:int=0; i < this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_cards.length; i++)
+				{
+					if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_cards[i].id == card_id)
+					{
+						card_amount = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_cards[i].amount;
+						card_name = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_cards[i].name;
+						break;
+					}
+				}
+				//判断
+				if(card_amount == 0)
+				{
+					Alert.show("你没有" + card_name, "无法改道：");
+				}
+				else
+				{
+					Ccontect.c2s_modiqueue(uid,target_uid,t_seat_id, t_targetCity.selectedItem.id, card_id);
+					SimFun.closeOpenCityWindow(this);
+				}				
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenCityWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<s:Label x="172" y="312" text="票价："/>
+	<s:Label x="171" y="336" text="收入预算："/>
+	<s:Label x="172" y="365" text="利润预算："/>
+	<s:Label x="242" y="309" id="t_buyPrice"/>
+	<s:Label x="241" y="336" id="t_earn"/>
+	<s:Label x="242" y="365" id="t_lirun"/>
+	<s:Label x="357" y="338" text="营业税："/>
+	<s:Label x="358" y="367" text="利润率："/>
+	<s:Label x="433" y="338" id="t_sui"/>
+	<s:Label x="436" y="367" id="t_suilv"/>
+	<s:Label x="434" y="286" id="t_time"/>
+	<s:Label x="358" y="266" text="到达地："/>
+	<s:Label x="358" y="286" text="运输时间："/>
+	<s:Label x="242" y="264" text="虎门" id="t_outCity"/>
+	<s:Label x="242" y="284" id="t_dist"/>
+	<s:Label x="172" y="394" text="运输人数："/>
+	<s:Label x="194" y="155" text="东风小霸王" fontSize="14" id="t_carName" color="#FF0000" fontWeight="bold"/>
+	<mx:Image x="194" y="186" source="images/j_sub/qiche1.gif" buttonMode="true" id="t_carPic"/>
+	<s:Label x="172" y="264" text="出发地："/>
+	<s:Label x="172" y="284" text="距离："/>
+	<s:Label x="240" y="394" width="50" id="t_amount" text="1"/>
+	<s:Button x="220" y="466" label="确定" buttonMode="true" id="createTradeBtn"  enabled="false" click="changeTargetCity()" skinClass="newSkin.commonBtn"/>
+	<s:Button x="376" y="466" label="双倍卡" buttonMode="true" click="cardUseEffect()" enabled="false"  skinClass="newSkin.commonBtn"/>
+	<s:DropDownList x="430" y="257" id="t_targetCity" dataProvider="{t_targetCity_arr}" labelField="name" close="changeCity(event)"></s:DropDownList>
+</s:Group>

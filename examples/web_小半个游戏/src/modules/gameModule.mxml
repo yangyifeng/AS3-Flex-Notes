@@ -1,0 +1,1583 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   layout="absolute" width="760" height="600" 
+		   creationComplete="gameModuleAPP()" 
+		   xmlns:component="component.*" 
+		   verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Style source="css/gameModuleCSS.css" />
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			import com.greensock.*;
+			import com.greensock.easing.*;
+			
+			import component.buyCar;
+			import component.buyCarList;
+			import component.buyCarListOneCar;
+			import component.buyCarStop;
+			import component.buyCard;
+			import component.carAbout;
+			import component.carMessage;
+			import component.map_city;
+			import component.map_country;
+			import component.map_town;
+			import component.oneCard;
+			import component.tradeCarGoods;
+			import component.tradeCarPeople;
+			import component.tradeChangeCar;
+			import component.tradeCityShow;
+			import component.tradeMessage;
+			import component.tradeModiGoods;
+			import component.tradeModiPeople;
+			import component.useCard;
+			
+			import flash.filters.GlowFilter;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Label;
+			import mx.controls.Text;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			
+			import net.*;
+			
+			import newSkin.cardScrollBar;
+			
+			import spark.events.DropDownEvent;
+			
+			public var newimg:Image;
+			public var newimg2:Image;
+			
+			public var gameModulePM:GameModulePM = new GameModulePM();
+			
+			//是否显示运输面板
+			private var _isLoadTransportBoard:Boolean = false; 
+			//当前显示的是汽车0，火车1，轮船2，飞机3
+			public var now_car_category:Number = 0;
+			//当前显示第一页
+			public var now_car_page:Number = 1; 			
+			//当前分类，当前页，5个车位信息
+			public var now_car_detail:ArrayCollection = new ArrayCollection(); 
+			//当前页，车辆信息数组
+			public var now_car_detail_show:Array = new Array();
+			//当前页，倒计时
+			public var now_car_time_countdown:Array = new Array();	
+			
+			//点击购买车，返回的车辆列表，保存数组
+			public var buy_car_callback:Array = new Array();
+			
+			//点击购买车，当前车位栏的seat_id
+			public var current_buy_seat_id:String = "";					
+			
+			
+			public function gameModuleAPP():void
+			{
+				loadMap(1);					
+				
+				changeUser(this.parentApplication.myself_uid);
+				
+				//获取用户基本信息
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USER_INF,					getUserInfoCallBack);
+				//排名				
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USER_ORDER,				getUserOrderCallBack);
+				//天气
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USER_WEATHER,				getUserWeatherCallBack);
+				//获取队列信息
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SHOW_QUEUE,				getQueueCallBack);
+				//购买车位
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_BUY_PARK,					getBuyParkCallBack);
+				//get 运输工具
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SHOW_VEHICLES,				getVehiclesCallBack);
+				//BUY 运输工具
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_BUY_VEHICLES,				getBuyVehiclesCallBack);
+				//卡片列表
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SHOW_CARDS,				getCardsCallBack);
+				//buy cards
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_BUY_CARDS,					getBuyCardsCallBack);
+				//use cards
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_USE_CARDS,					getUseCardsCallBack);
+				//取城镇信息
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_GET_CITYINFOS,				getCityInfosCallBack);
+				//取空闲工具
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_GET_FREE_QUEUE,			getFreeQueueCallBack);
+				//建立交易
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_CREATE_QUEUE,				getCreateQueueCallBack);
+				//完成交易
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_COMPLETE_QUEUE,			getCompleteQueueCallBack);
+				//单个运输工具相关信息
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SHOW_VEHICLES_INFOS,		getShowVehiclesInfosCallBack);
+				//车辆改名
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_RENAME_VEHICLES,			getRenameVehiclesCallBack);
+				//车辆丢弃
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_DICE_VEHICLES,				getDiceVehiclesCallBack);
+				//交易详情
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_SHOW_QUEUEINFOS,			getTradeMessageCallBack);
+				//改道信息
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_GET_CITYINFOS_BY_MODI,		getCityInfosByModiCallBack);
+				//交易修改
+				GNetIns.gm_socket.register_msg_func(Ccontect.MSG_NET_MODI_QUEUE,				getModiQueueCallBack);
+			}
+			
+			//切换地图
+			public function loadMap(num:Number):void
+			{
+				gameModulePM.loadMap(game_mapbg, num);
+			}
+			
+			/*切换用户*/
+			public function changeUser(target_id:Number):void
+			{
+				now_car_category = 0;
+				now_car_page = 1;
+				
+				this.parentApplication.current_show_uid = target_id;
+				Ccontect.c2s_userchange(this.parentApplication.myself_uid, this.parentApplication.current_show_uid);
+				this.parentApplication.onProgessPercent.text = "...";
+				this.parentApplication.onProgessText.text = "正在读取用户信息";
+				this.parentApplication.onProgessShow.visible = true;	
+			}
+			
+			
+			/*获取用户基本信息*/
+			private function getUserInfoCallBack(event:*,target:*):void
+			{
+				this.parentApplication.show_rolename	= target.rolename; //角色名				
+				this.parentApplication.show_sex		= target.sex; //性别
+				this.parentApplication.show_rank		= target.rank; //等级
+				this.parentApplication.show_picture	= target.picture; //头像				
+				this.parentApplication.show_exp		= target.exp; //经验			
+				this.parentApplication.show_asse		= target.coup; //点券
+				this.parentApplication.show_cash		= target.cash; //现金
+				this.parentApplication.show_desi		= target.desi; //称号
+				this.parentApplication.show_luck		= target.luck; //运气指数
+					
+				game_top.topFn_baseInfo();//基本信息						
+			}
+			
+			
+			/*获取排名信息*/
+			private function getUserOrderCallBack(event:*,target:*):void
+			{
+				this.parentApplication.show_order	= target.order_num; //排名
+				game_top.topFn_order();
+			}
+			
+			
+			/*获取天气信息*/
+			private function getUserWeatherCallBack(event:*,target:*):void
+			{
+				var tempWeatherget:String = target.weather;
+				var tempWeather:Array = tempWeatherget.split(",");
+				this.parentApplication.show_weather	= tempWeather[0];
+				game_top.topFn_weather();
+			}
+			
+			
+			//卡片原始数组: {ID 名称 现金 点券 类别 说明 数量 状态(0为正常, 1为锁定)}
+			public var now_cards:Array = new Array();
+			//卡片显示列表保存数组
+			public var now_cards_for_show:Array = new Array();	
+			/*获取卡片列表*/
+			private function getCardsCallBack(event:*,target:*):void
+			{
+				if(this.parentApplication.current_show_uid == target.target_uid)
+				{
+					for(var i:int=0; i<target.cards_list.length; i++)
+					{
+						if(add_card_or_not(target.cards_list[i][0]) == false)
+						{
+							now_cards.push({id:target.cards_list[i][0], 
+											name:target.cards_list[i][1], 
+											cash:target.cards_list[i][2], 
+											coupon:target.cards_list[i][3], 
+											category:target.cards_list[i][4], 
+											desc:target.cards_list[i][5], 
+											amount:target.cards_list[i][6], 
+											status:target.cards_list[i][7]});
+						}
+					}
+					
+					show_current_catetory_cards();
+				}
+			}
+			
+			
+			/*购买卡片返回*/
+			private function getBuyCardsCallBack(event:*,target:*):void
+			{
+				if(target.status === false)
+				{
+					Alert.show("购买失败！", "温馨提示");
+				}
+				else if(target.status === -1)
+				{
+					Alert.show("金币或点券不足！", "温馨提示");
+				}
+				else
+				{					
+					if(this.parentApplication.myself_uid == target.target_uid)
+					{
+						//重置原始数组
+						var current_card_order:int = 0;
+						for(var i:int=0; i<now_cards.length; i++)
+						{
+							if(now_cards[i].id == target.card_id)
+							{
+								current_card_order = i;
+								break;
+							}
+						}
+						now_cards[current_card_order].amount = target.card_num;
+						show_current_catetory_cards();
+						Alert.show("购买成功！你有" + target.card_num + "张"+now_cards[current_card_order].name+"了！", "温馨提示");
+					}
+				}
+			}
+			
+			
+			/*如果原始数组中存在该卡，不添加*/
+			private function add_card_or_not(id:int):Boolean
+			{
+				var returnvalue:Boolean = false;
+				for(var i:int=0; i<now_cards.length; i++)
+				{
+					if(now_cards[i].id == id)
+					{
+						returnvalue = true;
+						break;
+					}
+				}
+				return returnvalue;
+			}
+			
+			
+			/*显示当前分类的卡片*/
+			private function show_current_catetory_cards():void
+			{
+				now_cards.sortOn(["category","id"]);
+				game_cardBox.removeAllElements();
+				now_cards_for_show = [];
+				game_cardBox_scrollBar.value = 0;
+				var j:int = 0;				
+				for(var i:int=0; i<now_cards.length; i++)
+				{
+					if(now_cards[i].category == now_car_category || now_cards[i].category == 9)
+					{
+						now_cards_for_show[j] = new oneCard();
+						now_cards_for_show[j].card_pic.toolTip = "id:" + now_cards[i].id + "\n" +
+																"名称:" + now_cards[i].name + "\n" +
+																"金币:" + now_cards[i].cash + "\n" +
+																"点券:" + now_cards[i].coupon + "\n" +																
+																"描述:" + now_cards[i].desc + "\n" +
+																"数量:" + now_cards[i].amount + "\n" +
+																"状态:" + now_cards[i].status;
+						now_cards_for_show[j].card_text.text = now_cards[i].amount;
+						now_cards_for_show[j].card_pic.source = "images/card_big/" + now_cards[i].id + ".gif";						
+						now_cards_for_show[j].card_id.text = now_cards[i].id;
+						now_cards_for_show[j].card_num.text = now_cards[i].amount;					
+						now_cards_for_show[j].card_pic.addEventListener(MouseEvent.CLICK,clickCard);						
+						now_cards_for_show[j].card_pic.addEventListener(MouseEvent.MOUSE_DOWN,dragSource);
+												
+						
+						game_cardBox.addElement(now_cards_for_show[j]);
+						j++;
+					}
+				}
+			}		
+			
+			
+			/*获取当前5个队列*/
+			private function getQueueCallBack(event:*,target:*):void
+			{
+				trace(SimFun.traceObject(target));
+				if(this.parentApplication.current_show_uid == target.target_uid)
+				{
+					now_car_detail.removeAll();
+					now_car_detail = gameModulePM.deal_five_quque(now_car_detail, now_car_page, target);
+					loadTransPort();
+				}				
+			}
+			
+			
+			//购买车位返回
+			private function getBuyParkCallBack(event:*,target:*):void
+			{
+				if(target.status.coup == -1 || target.status.cash == -1)
+				{
+					Alert.show("现金不足,无法购买");
+				}
+				else
+				{
+					for(var seat_id:String in target.queue_list)
+					{
+						var seat_order:Number = Number(seat_id.substr(0,2));
+						//有车，空闲
+						if(typeof(target.queue_list[seat_id].goods_id) == "undefined")
+						{
+							//车图片  路径 + seat_id_last_three_num									
+							for(var j:int=0; j<now_car_detail.length; j++)
+							{
+								if(now_car_detail[j].car_order == seat_order)
+								{
+									//修改原始数据保存数组
+									now_car_detail[j].car_stop_stat = 1;
+									now_car_detail[j].seat_id = seat_id;
+									//重置车位显示数组
+									now_car_detail_show[j] = null;
+									now_car_detail_show[j] = new buyCar();
+									now_car_detail_show[j].seat_id.text = seat_id;
+									//重置车位显示列表
+									game_transmainBox.removeElementAt(j);
+									game_transmainBox.addElementAt(now_car_detail_show[j],j);
+									break;
+								}								
+							}
+						}
+					}
+				}				
+			}
+			
+			
+			/*买车返回*/
+			public function getBuyVehiclesCallBack(event:*,target:*):void
+			{
+				if(target.status.coup == -1 || target.status.cash == -1)
+				{
+					Alert.show("现金不足,无法购买");
+				}
+				else
+				{
+					for(var seat_id:String in target.queue_list)
+					{
+						var seat_order:Number = Number(seat_id.substr(0,2));
+						//有车，空闲
+						if(typeof(target.queue_list[seat_id].goods_id) == "undefined")
+						{
+							//车图片  路径 + seat_id_last_three_num									
+							for(var j:int=0; j<now_car_detail.length; j++)
+							{
+								if(now_car_detail[j].car_order == seat_order)
+								{
+									//修改原始数据保存数组
+									now_car_detail[j].car_stop_stat = 2;
+									now_car_detail[j].seat_id = seat_id;
+									now_car_detail[j].car_pic = "images/j_sub/qiche1.gif";
+									//重置车位显示数组
+									now_car_detail_show[j] = null;
+									now_car_detail_show[j] = new carMessage();
+									now_car_detail_show[j].car_order.text = now_car_detail.getItemAt(j).car_order + 1;
+									now_car_detail_show[j].seat_id.text = now_car_detail.getItemAt(j).seat_id;
+									now_car_detail_show[j].car_pic.source = now_car_detail.getItemAt(j).car_pic;
+									//点击建立新交易
+									now_car_detail_show[j].car_createQueue.visible = true;
+									now_car_detail_show[j].car_createQueue.addEventListener(MouseEvent.MOUSE_DOWN, function(event:MouseEvent):void{ record_now_seat_id=event.currentTarget.parent.seat_id.text;showHideTransPort(); });
+									//点击查看车辆相关信息
+									now_car_detail_show[j].car_pic.addEventListener(MouseEvent.MOUSE_DOWN,getShowCarAbout);									
+									//重置车位显示列表
+									game_transmainBox.removeElementAt(j);
+									game_transmainBox.addElementAt(now_car_detail_show[j],j);
+									break;
+								}								
+							}
+						}
+					}
+				}
+			}			
+			
+			//运输面板
+			public function loadTransPort(_show:Boolean=false):void
+			{
+				game_yunshuBtn.enabled=false;				
+				game_middleTransportbox.visible = true;
+				//加载运输信息
+				loadCarMessage();
+				TweenLite.to(game_middleTransportbox, 1, {x:0, y:0,alpha:1, ease:Back.easeInOut, onComplete:function():void{game_yunshuBtn.enabled=true;game_mapChoose.visible = false;}});
+				_isLoadTransportBoard = false;
+				
+				show_current_catetory_cards();
+			}
+			
+			
+			//点击车去地图界面，记录当前的串号
+			public var record_now_seat_id:String = "";
+			public function showHideTransPort(clear_record_now_seat_id:Boolean=false):void
+			{
+				if(clear_record_now_seat_id === true) record_now_seat_id = ""; //清空record_now_seat_id
+				game_yunshuBtn.enabled=false;				
+				if(_isLoadTransportBoard == true)
+				{
+					now_car_category=0;
+					now_car_page=1;
+					Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid)
+				}
+				else
+				{
+					TweenLite.to(game_middleTransportbox, 1, {x:-760, y:0,alpha:0, ease:Back.easeInOut, onComplete:function():void{game_yunshuBtn.enabled=true;game_mapChoose.visible = true;game_middleTransportbox.visible=false;game_transmainBox.removeAllElements();SimFun.stopAllRunDown(now_car_time_countdown);}});
+				}
+				_isLoadTransportBoard = !_isLoadTransportBoard;
+			}
+			
+			
+			/*加载车辆信息*/
+			public function loadCarMessage():void
+			{
+				now_car_detail_show.length = 0;
+				game_transmainBox.removeAllElements();
+				SimFun.stopAllRunDown(now_car_time_countdown);
+								
+				for(var i:int=0; i<now_car_detail.length; i++)
+				{
+					if(now_car_detail.getItemAt(i).car_stop_stat == 2 || now_car_detail.getItemAt(i).car_stop_stat == 3)
+					{
+						now_car_detail_show[i] = new carMessage();
+						now_car_detail_show[i].car_order.text = now_car_detail.getItemAt(i).car_order + 1;
+						now_car_detail_show[i].seat_id.text = now_car_detail.getItemAt(i).seat_id;
+						now_car_detail_show[i].car_pic.source = now_car_detail.getItemAt(i).car_pic;
+						if(now_car_detail.getItemAt(i).car_stop_stat == 3)
+						{
+							var oil_card_id:Number = 0;
+							var maintain_card_id:Number = 0;
+							var fault_card_id:Number = 0;
+							switch(now_car_category)
+							{								
+								case 1:
+									oil_card_id = 1;
+									maintain_card_id = 6;
+									fault_card_id = 10;
+									break;
+								case 2:
+									oil_card_id = 1;
+									maintain_card_id = 7;
+									fault_card_id = 11;
+									break;
+								case 3:
+									oil_card_id = 1;
+									maintain_card_id = 8;
+									fault_card_id = 12;
+									break;
+								default:
+									oil_card_id = 1;
+									maintain_card_id = 5;
+									fault_card_id = 9;
+									break;								
+							}
+							
+							now_car_detail_show[i].car_goods.source = now_car_detail.getItemAt(i).car_goods;
+							now_car_detail_show[i].car_city.text = now_car_detail.getItemAt(i).car_city;							
+							//点击查看交易信息
+							now_car_detail_show[i].car_city.buttonMode = true;
+							now_car_detail_show[i].car_city.toolTip = "点击查看交易信息";
+							now_car_detail_show[i].car_city.addEventListener(MouseEvent.MOUSE_DOWN,getTradeMessage);
+							
+							//加油卡
+							if(now_car_detail.getItemAt(i).stat_oiles != 0)
+							{
+								now_car_detail_show[i].car_cardRight.alpha = 1;
+								now_car_detail_show[i].car_cardRight.enabled = true;
+								now_car_detail_show[i].car_cardRight.visible = true;
+								now_car_detail_show[i].car_cardRight.buttonMode = true;
+								now_car_detail_show[i].car_cardRight.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{									
+									sureUseCard(oil_card_id,event.currentTarget.parent.seat_id.text,0,0,0,1);
+								});
+							}
+							//保养卡
+							now_car_detail_show[i].car_cardLeft.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{									
+								sureUseCard(maintain_card_id,event.currentTarget.parent.seat_id.text,0,0,0,1);
+							});
+							//维修卡
+							now_car_detail_show[i].car_cardLeft2.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{									
+								sureUseCard(fault_card_id,event.currentTarget.parent.seat_id.text,0,0,0,1);
+							});							
+							
+							if(now_car_detail.getItemAt(i).curr_status != 0)
+							{
+								Alert.show("你的交通工具需要维修啦！");
+								now_car_detail_show[i].car_cardLeft2.visible = true;
+								now_car_detail_show[i].car_cardLeft2.alpha = 1;
+								now_car_detail_show[i].car_cardLeft2.enabled = true;
+								now_car_detail_show[i].car_cardLeft2.buttonMode = true;
+								now_car_detail_show[i].car_cardLeft.visible = false;
+								
+								now_car_detail_show[i].car_time.text = SimFun.secondsToTimeFormat(now_car_detail.getItemAt(i).car_time); 
+							}
+							else
+							{
+								now_car_time_countdown.push(new Timer(1000));
+								SimFun.timeRunDown(	now_car_detail_show[i].car_time, 
+													Number(now_car_detail.getItemAt(i).car_time),
+													Number(now_car_detail.getItemAt(i).stat_maintain),
+													Number(now_car_detail.getItemAt(i).stat_fault),
+													now_car_time_countdown[now_car_time_countdown.length-1],
+													function():void{});
+							}
+							
+							now_car_detail_show[i].car_getMoney.addEventListener(MouseEvent.CLICK, 
+																				function(event:MouseEvent):void
+																				{																					
+																					sendCompleteQueue(event);
+																				});
+							
+						}
+						else
+						{
+							//点击建立新交易
+							now_car_detail_show[i].car_createQueue.visible = true;
+							now_car_detail_show[i].car_createQueue.addEventListener(MouseEvent.MOUSE_DOWN, function(event:MouseEvent):void{ record_now_seat_id=event.currentTarget.parent.seat_id.text; showHideTransPort(); });
+														
+							now_car_detail_show[i].car_cardLeft.alpha = 0.5;
+							now_car_detail_show[i].car_cardLeft.enabled = false;
+							now_car_detail_show[i].car_cardLeft.visible = true;
+							now_car_detail_show[i].car_cardLeft2.visible = false;
+							now_car_detail_show[i].car_cardRight.alpha = 0.5;
+							now_car_detail_show[i].car_cardRight.enabled = false;
+							now_car_detail_show[i].car_cardRight.visible = true;
+						}							
+						
+						//点击查看车辆相关信息
+						now_car_detail_show[i].car_pic.toolTip = "点击查看车辆相关信息";
+						now_car_detail_show[i].car_pic.addEventListener(MouseEvent.MOUSE_DOWN,getShowCarAbout);
+					}
+					//买车
+					else if(now_car_detail.getItemAt(i).car_stop_stat == 1)
+					{
+						now_car_detail_show[i] = new buyCar();
+						now_car_detail_show[i].seat_id.text = now_car_detail.getItemAt(i).seat_id;
+					}
+					//买车位
+					else
+					{
+						now_car_detail_show[i] = new buyCarStop();
+						now_car_detail_show[i].order.text = now_car_detail.getItemAt(i).car_order;
+					}
+					game_transmainBox.addElement(now_car_detail_show[i]);
+				}
+			}
+
+			/*倒计时完了，提交结算*/
+			public function sendCompleteQueue(event:MouseEvent):void
+			{
+				Ccontect.c2s_completequeue(this.parentApplication.myself_uid,this.parentApplication.current_show_uid,event.currentTarget.parent.seat_id.text);
+			}
+			//结算返回
+			public function getCompleteQueueCallBack(event:*,target:*):void
+			{
+				var getMoneyPopUp:Label = new Label();
+				
+				if(target.complete_stat.life_time < 0)
+				{
+					getMoneyPopUp.text = "货物已超过生命期，没有任何收益！"
+				}
+				else
+				{
+					if(target.complete_stat.my_self != "")
+					{
+						getMoneyPopUp.text = target.complete_stat.my_self[0] + " " + SimFun.numberBack(target.complete_stat.my_self[1]);;
+					}
+					if(target.complete_stat.my_click != "")
+					{
+						getMoneyPopUp.text += "\n" + target.complete_stat.my_click[0] + " " + SimFun.numberBack(target.complete_stat.my_click[1]);;
+					}
+					if(target.complete_stat.my_operate != "")
+					{
+						getMoneyPopUp.text += "\n" + target.complete_stat.my_operate[0] + " " + SimFun.numberBack(target.complete_stat.my_operate[1]);;
+					}
+				}				
+				//弹出赚钱效果				
+				getMoneyPopUp.setStyle("color","0xfcff00");
+				getMoneyPopUp.setStyle("fontSize", "14");
+				getMoneyPopUp.filters = [new GlowFilter(0x000000,1,3,3,2,1)];
+				
+				SimFun.getMoneyWindow(getMoneyPopUp,this, mouseX, mouseY);
+				
+				
+					var seat_id:String = target.seat_id;
+					var seat_order:Number = Number(seat_id.substr(0,2));
+
+						//车图片  路径 + seat_id_last_three_num									
+						for(var j:int=0; j<now_car_detail.length; j++)
+						{
+							if(now_car_detail[j].car_order == seat_order)
+							{
+								//修改原始数据保存数组
+								now_car_detail[j].car_stop_stat = 2;
+								now_car_detail[j].seat_id = seat_id;
+								now_car_detail[j].car_pic = "images/j_sub/qiche1.gif";							
+								//重置车位显示数组
+								now_car_detail_show[j] = null;
+								now_car_detail_show[j] = new carMessage();
+								now_car_detail_show[j].car_order.text = now_car_detail.getItemAt(j).car_order + 1;
+								now_car_detail_show[j].seat_id.text = now_car_detail.getItemAt(j).seat_id;
+								now_car_detail_show[j].car_pic.source = now_car_detail.getItemAt(j).car_pic;
+								//点击建立新交易
+								now_car_detail_show[j].car_createQueue.visible = true;
+								now_car_detail_show[j].car_createQueue.addEventListener(MouseEvent.MOUSE_DOWN, function(event:MouseEvent):void{ record_now_seat_id=event.currentTarget.parent.seat_id.text;showHideTransPort(); });									
+								
+								now_car_detail_show[j].car_cardLeft.alpha = 0.5;
+								now_car_detail_show[j].car_cardLeft.enabled = false;
+								now_car_detail_show[j].car_cardLeft.visible = true;
+								now_car_detail_show[j].car_cardLeft2.visible = false;
+								now_car_detail_show[j].car_cardRight.alpha = 0.5;
+								now_car_detail_show[j].car_cardRight.enabled = false;
+								now_car_detail_show[j].car_cardRight.visible = true;
+								
+								//点击查看车辆相关信息
+								now_car_detail_show[j].car_pic.addEventListener(MouseEvent.MOUSE_DOWN,getShowCarAbout);								
+								//重置车位显示列表
+								game_transmainBox.removeElementAt(j);
+								game_transmainBox.addElementAt(now_car_detail_show[j],j);
+								break;
+							}								
+						}
+			}
+			
+			/*查看交易信息*/
+			public function getTradeMessage(event:MouseEvent):void
+			{
+				Ccontect.c2s_showqueueinfos(this.parentApplication.myself_uid,this.parentApplication.current_show_uid,event.currentTarget.parent.seat_id.text);
+			}
+			/*查看交易信息返回*/
+			public function getTradeMessageCallBack(event:*,target:*):void
+			{
+				var showTradeMessage:tradeMessage = new tradeMessage();
+				showTradeMessage.t_name.text = target.queue_infos.tool_name;
+				showTradeMessage.t_goods.text = target.queue_infos.goods_count + " " + target.queue_infos.goods_name;
+				showTradeMessage.t_road.text = SimFun.cityArr[target.queue_infos.leave_city] + " -- " + SimFun.cityArr[target.queue_infos.arrive_city];
+				showTradeMessage.t_dist.text = target.queue_infos.distance;
+				showTradeMessage.t_time.text = SimFun.secondsToTimeFormat(target.queue_infos.remain_time);
+				showTradeMessage.t_price.text = target.queue_infos.goods_price;
+				showTradeMessage.t_cost.text = target.queue_infos.sale_price;
+				showTradeMessage.t_reccost.text = target.queue_infos.budget_profit;
+				showTradeMessage.t_pay.text = target.queue_infos.goods_cost;
+				showTradeMessage.t_sui.text = target.queue_infos.tax_cost;
+				showTradeMessage.t_lirun.text = target.queue_infos.goods_profit;				
+				
+				if(this.parentApplication.myself_uid != this.parentApplication.current_show_uid)
+				{
+					showTradeMessage.t_modi.enabled = false;
+				}
+				else
+				{
+					if(target.queue_infos.remain_time == 0)
+					{
+						showTradeMessage.t_addSpeed.enabled = false;
+						showTradeMessage.t_modi.enabled = false;
+					}
+					else
+					{
+						showTradeMessage.t_modi.addEventListener(MouseEvent.CLICK, function():void{
+							SimFun.closeOpenWindow(showTradeMessage);
+							modiQueue(target.queue_infos.leave_city, target.seat_id, target.queue_infos.goods_id);
+						});
+					}
+				}
+				
+				SimFun.openWindow(showTradeMessage,this);
+			}
+			
+			/*改道*/
+			public function modiQueue(city_id:Number, seat_id:String, good_id:Number):void
+			{
+				Ccontect.c2s_getcityinfosbymodi(this.parentApplication.myself_uid,
+												this.parentApplication.current_show_uid,
+												city_id,seat_id,good_id);
+			}
+			public function getCityInfosByModiCallBack(event:*,target:*):void
+			{
+				var goods_id:int = 0;
+				for(var j:String in target.rece_citys)
+				{
+					goods_id = Number(j);
+				}
+				
+				var target_city_info_arr:ArrayCollection = new ArrayCollection();
+				var leave_city_info:Object = new Object();
+				leave_city_info["tax"] = target.citys.tax;
+				for(var i:String in target.rece_citys[goods_id])
+				{
+					if(target.rece_citys[goods_id][i].id != target.citys.id)
+					{
+						target_city_info_arr.addItem({name:target.rece_citys[goods_id][i].name,
+													id:target.rece_citys[goods_id][i].id,
+													tax:target.rece_citys[goods_id][i].tax,
+													distance:target.rece_citys[goods_id][i].distance[target.carinfos[2]]
+													});
+					}
+				}				
+				
+				//人
+				if(goods_id == 9999)
+				{					
+					var modiPeopleWindow:tradeModiPeople = new tradeModiPeople();
+					modiPeopleWindow.t_carName.text = target.carinfos[1];
+					modiPeopleWindow.t_outCity.text = target.citys.name;
+					modiPeopleWindow.t_targetCity_arr = target_city_info_arr;
+					modiPeopleWindow.t_amount.text = target.citys.goods_count;
+					modiPeopleWindow.leave_city_info = leave_city_info;
+					modiPeopleWindow.car_info = target.carinfos;
+					modiPeopleWindow.t_seat_id = target.seat_id;
+					SimFun.openWindow(modiPeopleWindow,this);
+				}
+				//货物
+				else
+				{
+					var modiGoodsWindow:tradeModiGoods = new tradeModiGoods();
+					modiGoodsWindow.t_carName.text = target.carinfos[1];
+					modiGoodsWindow.t_outCity.text = target.citys.name;
+					modiGoodsWindow.t_goods.text = target.citys.out[goods_id][1];
+					modiGoodsWindow.t_amount.text = target.citys.goods_count;
+					modiGoodsWindow.t_leftTime.text = target.citys.out[goods_id][5];
+					modiGoodsWindow.t_buyPrice.text = target.citys.out[goods_id][3] + "元";
+					modiGoodsWindow.t_sellPrice.text = target.citys.out[goods_id][4] + "元";
+					leave_city_info["ccj"] = target.citys.out[goods_id][3];
+					leave_city_info["lsj"] = target.citys.out[goods_id][4];
+					leave_city_info["smq"] = target.citys.out[goods_id][5];
+					modiGoodsWindow.t_targetCity_arr = target_city_info_arr;
+					modiGoodsWindow.leave_city_info = leave_city_info;
+					modiGoodsWindow.car_info = target.carinfos;
+					modiGoodsWindow.t_seat_id = target.seat_id;
+					SimFun.openWindow(modiGoodsWindow,this);
+				}
+			}
+			
+			/*改道返回*/
+			public function getModiQueueCallBack(event:*,target:*):void
+			{
+				if(target.modi_stat == false)
+				{
+					Alert.show("改道失败！","提示:");
+				}
+				Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);
+			}
+			
+			/*查看车辆相关信息*/
+			public function getShowCarAbout(event:MouseEvent):void
+			{
+				Ccontect.c2s_showvehiclesinfos(this.parentApplication.myself_uid,this.parentApplication.current_show_uid,event.currentTarget.parent.seat_id.text);
+			}	
+			/*查看车辆相关信息返回*/
+			public function getShowVehiclesInfosCallBack(event:*,target:*):void
+			{
+				var showCarAboutDetail:carAbout = new carAbout();
+				showCarAboutDetail.seat_id.text 			= target.seat_id;
+				showCarAboutDetail.c_name.text 				= target.vehicle_infos.car_name;
+				showCarAboutDetail.c_load.text 				= target.vehicle_infos.load;
+				showCarAboutDetail.c_speed.text 			= target.vehicle_infos.speed;
+				showCarAboutDetail.c_curr_relia.text 		= String(100 - target.vehicle_infos.curr_relia) + "%";
+				showCarAboutDetail.c_curr_resi.text 		= target.vehicle_infos.curr_resi;
+				showCarAboutDetail.c_max_miles.text 		= target.vehicle_infos.max_miles;
+				showCarAboutDetail.c_base_cost.text 		= target.vehicle_infos.base_cost;
+				showCarAboutDetail.c_run_cost.text 			= target.vehicle_infos.run_cost;
+				showCarAboutDetail.c_day_profit.text 		= target.vehicle_infos.day_profit;
+				showCarAboutDetail.c_week_profit.text 		= target.vehicle_infos.week_profit;
+				showCarAboutDetail.c_totall_profit.text 	= target.vehicle_infos.totall_profit;
+				//维修
+				if(target.vehicle_infos.status_fault != 0)
+				{
+					showCarAboutDetail.c_repair.enabled = true;
+				}
+				//保养
+				if(target.vehicle_infos.status_maintain != 0)
+				{
+					showCarAboutDetail.c_feed.enabled = true;
+				}
+				//加油
+				if(target.vehicle_infos.status_oiles != 0)
+				{
+					showCarAboutDetail.c_addoil.enabled = true;
+				}
+				SimFun.openWindow(showCarAboutDetail,this);
+			}
+			/*改名返回*/
+			public function getRenameVehiclesCallBack(event:*,target:*):void
+			{
+				if(target.rename_stat == false)
+				{
+					Alert.show("改名失败！","提示");
+				}
+				else
+				{
+					Alert.show("名称：" + target.new_name,"提示");
+				}
+			}
+			/*丢弃车辆返回*/
+			public function getDiceVehiclesCallBack(event:*,target:*):void
+			{
+				if(target.dice_stat == true)
+				{
+					Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);
+				}
+				else
+				{
+					Alert.show("正在拉货，不可以丢弃","丢弃失败：");
+				}				
+			}
+			
+			/*返回当前车的种类的所有列表*/
+			public function getVehiclesCallBack(event:*,target:*):void
+			{		
+				//数组顺序：
+				var arrOrder:Number = 0;
+				buy_car_callback = [];								
+				for(var allCar:String in target.vehicles_list)
+				{					
+					buy_car_callback[arrOrder] = new buyCarListOneCar();
+					buy_car_callback[arrOrder].car_name.text 		= target.vehicles_list[allCar][1];
+					buy_car_callback[arrOrder].car_speed.text 		= target.vehicles_list[allCar][7];
+					buy_car_callback[arrOrder].car_load.text 		= target.vehicles_list[allCar][6];
+					buy_car_callback[arrOrder].car_max_run.text 	= target.vehicles_list[allCar][10];
+					buy_car_callback[arrOrder].car_cash.text 		= "$" + target.vehicles_list[allCar][8];
+					buy_car_callback[arrOrder].car_coupon.text 		= "￥" + target.vehicles_list[allCar][9];
+					buy_car_callback[arrOrder].car_level.text 		= target.vehicles_list[allCar][3];
+					buy_car_callback[arrOrder].car_id.text 			= target.vehicles_list[allCar][0];
+					
+					arrOrder++;
+				}
+				var showBuyOneCar:buyCarList = new buyCarList();
+				SimFun.openWindow(showBuyOneCar,this);
+			}
+			
+			
+			/**
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 卡片系统
+			 * 
+			 * 
+			 * 
+			 * 
+			 * */
+			
+			/*在车位栏上使用卡片效果*/
+			public function cardUseEffect(event:MouseEvent):void
+			{
+				var useCardShow:useCard = new useCard();
+				useCardShow.card.source = event.currentTarget.source;
+				SimFun.useCardWindow(useCardShow,this);
+			}
+			
+			public var current_card_id:int = 0;
+			//点击卡片使用
+			public function clickCard(event:MouseEvent):void
+			{
+				current_card_id = int(event.currentTarget.owner.card_id.text);
+				var current_card_order:int = 0;
+				for(var i:int=0; i<now_cards.length; i++)
+				{
+					if(now_cards[i].id == current_card_id)
+					{
+						current_card_order = i;
+						break;
+					}
+				}				
+				var show_buy_car:buyCard = new buyCard();
+				show_buy_car.card_id.text 		= now_cards[current_card_order].id;
+				show_buy_car.card_pic.source	= "images/card_big/" + now_cards[current_card_order].id + ".gif";
+				show_buy_car.card_name.text 	= now_cards[current_card_order].name;
+				show_buy_car.card_cash.text 	= "$" + now_cards[current_card_order].cash + "/张";
+				show_buy_car.card_coupon.text 	= "￥" + now_cards[current_card_order].coupon + "/张";
+				show_buy_car.card_desc.text 	= now_cards[current_card_order].desc;
+				show_buy_car.card_amount.text 	= now_cards[current_card_order].amount + "张";
+				show_buy_car.card_status.text 	= (now_cards[current_card_order].status==0)?"未锁定":"锁定";
+				
+				SimFun.openCityWindow(show_buy_car,this);
+			}
+			
+			
+			//拖动卡片使用
+			public function dragSource(e:MouseEvent):void
+			{
+				current_card_id = int(e.currentTarget.owner.card_id.text);
+				//用于显示
+				newimg = new Image();
+				newimg.source = e.currentTarget.source;
+				newimg.alpha = 0.5;					
+				this.addElement(newimg);
+				//用于碰撞
+				newimg2 = new Image();
+				newimg2.source = newimg.source;
+				newimg2.alpha = 0.5;
+				newimg2.width = 1;
+				newimg2.height = 1;
+				this.addElement(newimg2);
+				
+				newimg.startDrag(true);
+				stage.addEventListener(MouseEvent.MOUSE_UP , mouseUpHandler);
+				stage.addEventListener(MouseEvent.MOUSE_MOVE, hitTestHandle);				
+			}
+			public function mouseUpHandler(event:MouseEvent):void
+			{
+				stopDrag();
+				stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);				
+				stage.removeEventListener(MouseEvent.MOUSE_MOVE, hitTestHandle);				
+				
+				//天气
+				if(current_card_id == 21)
+				{
+					if(newimg2.hitTestObject(game_top.top_weather) == true)	
+					{
+						sureUseCard(21,"",1,0,0,1);
+					}
+				}
+				
+				//运气
+				if(current_card_id == 22)
+				{
+					if(newimg2.hitTestObject(game_top.top_luck_box) == true)
+					{
+						sureUseCard(22,"",0,1,0,1);
+					}
+				}
+				
+				//车位
+				if(current_card_id != 21 && 
+					current_card_id != 22 &&
+					current_card_id != 23 &&
+					current_card_id != 24)
+				{
+					for(var i:int=0; i< now_car_detail_show.length; i++)
+					{					
+						if(newimg2.hitTestObject(game_transmainBox.getElementAt(i) as DisplayObject) == true && now_car_detail_show[i].car_pic.source != "")
+						{
+							sureUseCard(current_card_id,now_car_detail_show[i].seat_id.text,0,0,0,1);
+						}
+					}
+				}
+				
+				
+				this.removeElement(newimg);
+				this.removeElement(newimg2);
+				
+				for(var j:int=0; j< now_car_detail_show.length; j++)
+				{
+					now_car_detail_show[j].maski.visible = false;
+				}
+				game_top.top_luck_box_mask.visible = false;
+				game_top.top_weather_mask.visible = false;
+			}
+			public function hitTestHandle(event:MouseEvent):void
+			{
+				newimg2.x = newimg.x;
+				newimg2.y = newimg.y;
+				
+				//车位
+				if(current_card_id != 21 && 
+					current_card_id != 22 &&
+					current_card_id != 23 &&
+					current_card_id != 24)
+				{
+					for(var i:int=0; i< now_car_detail_show.length; i++)
+					{					
+						if(newimg2.hitTestObject(game_transmainBox.getElementAt(i) as DisplayObject) == true && now_car_detail_show[i].car_pic.source != "")
+						{
+							now_car_detail_show[i].maski.visible = true;
+						}
+						else
+						{
+							now_car_detail_show[i].maski.visible = false;
+						}					
+						
+					}
+				}
+				
+				//天气
+				if(current_card_id == 21)
+				{
+					if(newimg2.hitTestObject(game_top.top_weather) == true)	 game_top.top_weather_mask.visible = true;
+					else game_top.top_weather_mask.visible = false;
+				}
+				
+				//运气
+				if(current_card_id == 22)
+				{
+					if(newimg2.hitTestObject(game_top.top_luck_box) == true) game_top.top_luck_box_mask.visible = true;
+					else game_top.top_luck_box_mask.visible = false;
+				}
+			}
+			
+			
+			
+			//确定用卡   不提示，直接使用
+			public function sureUseCard(card_id:Number, seat_id:String, weat:Number, luck:Number, beau_id:Number, card_num:Number):void
+			{
+				Ccontect.c2s_usecards(this.parentApplication.myself_uid, this.parentApplication.current_show_uid,card_id,seat_id,weat,luck,beau_id,card_num);
+			}
+			
+			
+			
+			public function getUseCardsCallBack(event:*,target:*):void
+			{
+				if(target.status === 0)
+				{
+					Alert.show("不是好友，不能用卡！", "温馨提示");
+				}
+				else if(target.status === -1)
+				{
+					Alert.show("卡被锁定！", "温馨提示");
+				}
+				else if(target.status === -2)
+				{
+					Alert.show("卡数量不够！", "温馨提示");
+				}
+				else if(target.status === -3)
+				{
+					Alert.show("卡还没购买！", "温馨提示");
+				}
+				else if(target.status === false)
+				{
+					Alert.show("参数错误！", "温馨提示");
+				}
+				else if(target.status === true)
+				{
+					//重置原始数组
+					var current_card_order:int = 0;
+					for(var i:int=0; i<now_cards.length; i++)
+					{
+						if(now_cards[i].id == target.card_id)
+						{
+							current_card_order = i;
+							break;
+						}
+					}
+					now_cards[current_card_order].amount = target.card_num;
+					show_current_catetory_cards();
+					var useCardShow:useCard = new useCard();
+					useCardShow.card.source = "images/card/xiuli2.gif";
+					useCardShow.card_text.text = now_cards[current_card_order].name + "使用成功！你厉害啦！";
+					SimFun.useCardWindow(useCardShow,this);	
+					
+					Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);
+				}
+				else
+				{
+				
+				}
+			}	
+			
+			
+			/**
+			 * 
+			 * 
+			 * 
+			 * 交易系统			
+			 * 
+			 * 
+			 * 
+			 * 
+			 * */
+			
+			
+			//产出
+			public var out_goods:ArrayCollection = new ArrayCollection();
+			//接收
+			public var rec_goods:Object = new Object();
+			//当前城市
+			public var current_choose_city:Array = [];
+			//选择的物品
+			public var current_choose_goods:Array = [];
+			//选择的交通工具
+			public var current_choose_car:Array = [];
+			//可选择的到达的城市的下拉列表
+			[Bindable]public var current_choose_target_city_arr:ArrayCollection = new ArrayCollection();
+			//已选择的城市id
+			public var current_choose_target_city_id:int = 0;
+			//取城镇信息
+			public function getCityInfosCallBack(event:*,target:*):void
+			{
+				//重置
+				out_goods.removeAll();
+				rec_goods = null;
+				current_choose_car.length = 0;
+				current_choose_goods.length =0;
+				current_choose_goods[0] = 0;
+				current_choose_target_city_id = 0;				
+				
+				//可接收的产品
+				rec_goods = target.rece_citys;
+				
+				//当前城市信息
+				current_choose_city["id"] = target.citys.id;
+				current_choose_city["tax"] = target.citys.tax;
+				current_choose_city["name"] = target.citys.name;
+				current_choose_city["tools_type"] = target.citys.tools_type;
+				//当前选择的车信息
+				if(target.carinfos != null)
+				{
+					current_choose_car = target.carinfos;
+					current_choose_car.push(target.seat_id);
+				}
+								
+				var openTradeCityShow:tradeCityShow = new tradeCityShow();
+				
+				openTradeCityShow.recGoodsBox.removeAllElements();
+				openTradeCityShow.outGoodsBox.removeAllElements();
+				
+				openTradeCityShow.city_name.text = target.citys.name;
+				for(var i:String in target.citys.out)
+				{
+					//当前城市产出的所有产品信息
+					out_goods.addItem(target.citys.out[i]);
+					
+					var outElem:Image = new Image();
+					outElem.source = "images/goods/"+ target.citys.out[i][0] +".png";
+					if(target.citys.out[i][0] == 9999)
+					{
+						outElem.toolTip = 	"Id： "+ target.citys.out[i][0] + "\n" 
+							+ "名称： "+ target.citys.out[i][1] + "\n" 
+							+ "总数： "+ target.citys.out[i][2] + "\n" 
+							+ "可接收数： " + target.citys.out[i][3];
+					}
+					else
+					{
+						outElem.toolTip = 	"Id： "+ target.citys.out[i][0] + "\n" 
+							+ "名称： "+ target.citys.out[i][1] + "\n" 
+							+ "出厂价： "+ target.citys.out[i][3] + " 元/件" + "\n" 
+							+ "零售价： "+ target.citys.out[i][4] + " 元/件" + "\n" 
+							+ "生命期： "+ target.citys.out[i][5] + " 天" + "\n" 
+							+ "总数： "+ target.citys.out[i][7] + "\n" 
+							+ "可接收数： " + target.citys.out[i][8];
+					}	
+					outElem.buttonMode = true;
+					outElem.id = target.citys.out[i][0];
+					outElem.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{
+																					for(var j:int=0; j<openTradeCityShow.outGoodsBox.numElements; j++)
+																					{
+																						(openTradeCityShow.outGoodsBox.getElementAt(j) as UIComponent).filters = null;
+																					}
+																					current_choose_goods[0] = event.currentTarget.id;
+																					for(var m:int=0; m<out_goods.length; m++)
+																					{
+																						if(out_goods[m][0] == current_choose_goods[0])
+																						{
+																							current_choose_goods.length = 0;
+																							current_choose_goods = out_goods[m];
+																							break;
+																						}
+																					}
+																					event.currentTarget.filters = [new GlowFilter(0x000000,0.7)];							
+																				});
+					openTradeCityShow.outGoodsBox.addElement(outElem);
+				}
+				for(var k:String in target.citys.rece)
+				{
+					var recElem:Image = new Image();
+					recElem.source = "images/goods/"+ target.citys.rece[k][0] +".png";
+					if(target.citys.rece[k][0] == 9999)
+					{
+						recElem.toolTip = 	"Id： "+ target.citys.rece[k][0] + "\n" 
+											+ "名称： "+ target.citys.rece[k][1] + "\n" 
+											+ "总数： "+ target.citys.rece[k][2] + "\n" 
+											+ "可接收数： " + target.citys.rece[k][3];
+					}
+					else
+					{
+						recElem.toolTip = 	"Id： "+ target.citys.rece[k][0] + "\n" 
+											+ "名称： "+ target.citys.rece[k][1] + "\n" 
+											+ "出厂价： "+ target.citys.rece[k][3] + " 元/件" + "\n" 
+											+ "零售价： "+ target.citys.rece[k][4] + " 元/件" + "\n" 
+											+ "生命期： "+ target.citys.rece[k][5] + " 天" + "\n" 
+											+ "总数： "+ target.citys.rece[k][7] + "\n" 
+											+ "可接收数： " + target.citys.rece[k][8];
+					}					
+					openTradeCityShow.recGoodsBox.addElement(recElem);
+				}
+				openTradeCityShow.sureBtn.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{
+																												if(current_choose_goods[0] == 0)
+																												{
+																													Alert.show("你还没有选择产出的物品","拉不了：");
+																												}																												
+																												else
+																												{
+																													SimFun.closeOpenCityWindow(event.currentTarget.parent);
+																													sure_trade();
+																												}
+																											});
+				SimFun.openCityWindow(openTradeCityShow, this);
+			}
+			//弹出交易场口
+			public var openTradeCarPeopleShow:tradeCarPeople = new tradeCarPeople();
+			public var openTradeCarGoodsShow:tradeCarGoods = new tradeCarGoods();
+			public function sure_trade():void
+			{
+				if(current_choose_goods[0] == 0)
+				{
+					Alert.show("请选择产出的物品","温馨提示：");
+				}				
+				else
+				{
+					current_choose_target_city_id = 0;
+					current_choose_target_city_arr.removeAll();
+					if(rec_goods[current_choose_goods[0]] != "")
+					{
+						for(var k:String in rec_goods[current_choose_goods[0]])
+						{
+							if(rec_goods[current_choose_goods[0]][k].id != current_choose_city["id"])
+							{
+								current_choose_target_city_arr.addItem({name:rec_goods[current_choose_goods[0]][k].name,
+																		id:rec_goods[current_choose_goods[0]][k].id});
+							}
+						}
+					}
+					
+					if(current_choose_goods[0] == 9999)
+					{
+						//人
+						if(current_choose_car.length != 0)
+						{
+							openTradeCarPeopleShow.t_carName.text = current_choose_car[1];
+							openTradeCarPeopleShow.t_carPic.source = "images/j_sub/qiche1.gif";
+						}
+						else
+						{
+							openTradeCarPeopleShow.t_carName.text = "请选择运输工具";
+							openTradeCarPeopleShow.t_carPic.source = "";
+						}
+						openTradeCarPeopleShow.t_targetCity_arr = current_choose_target_city_arr;
+						openTradeCarPeopleShow.t_outCity.text = current_choose_city["name"];
+						openTradeCarPeopleShow.t_dist.text = "0";
+						openTradeCarPeopleShow.t_buyPrice.text = "0";
+						openTradeCarPeopleShow.t_earn.text = "0";
+						openTradeCarPeopleShow.t_lirun.text = "0";
+						openTradeCarPeopleShow.t_time.text = "0";
+						openTradeCarPeopleShow.t_sui.text = "0";
+						openTradeCarPeopleShow.t_suilv.text = "0";
+						openTradeCarPeopleShow.t_amount.text = "1";
+						
+						openTradeCarPeopleShow.t_amount.enabled = false;
+						openTradeCarPeopleShow.t_amountUp.enabled = false;
+						
+						openTradeCarPeopleShow.t_targetCity.addEventListener(DropDownEvent.CLOSE, peopleSeleceTargetCityHandle);
+						openTradeCarPeopleShow.changeCar.addEventListener(MouseEvent.CLICK, tradeWindowChangeCar);
+						openTradeCarPeopleShow.createTradeBtn.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{
+																													if(current_choose_car.length == 0 || String(openTradeCarPeopleShow.t_targetCity.selectedItem) == "undefined")
+																													{
+																														Alert.show("没有选择运输工具或者目的地","拉不了：");
+																													}
+																													else
+																													{
+																														SimFun.closeOpenCityWindow(event.currentTarget.parent);
+																														createQueueCallBack(openTradeCarPeopleShow.t_targetCity.selectedItem.id, Number(openTradeCarPeopleShow.t_amount.text));
+																													}
+																												});
+						SimFun.openCityWindow(openTradeCarPeopleShow, this);
+					}
+					else
+					{
+						//货
+						if(current_choose_car.length != 0)
+						{
+							openTradeCarGoodsShow.t_carName.text = current_choose_car[1];
+							openTradeCarGoodsShow.t_carPic.source = "images/j_sub/qiche1.gif";
+						}
+						else
+						{
+							openTradeCarGoodsShow.t_carName.text = "请选择运输工具";
+							openTradeCarGoodsShow.t_carPic.source = "";
+						}						
+						openTradeCarGoodsShow.t_goods.text = current_choose_goods[1];
+						openTradeCarGoodsShow.t_buyPrice.text = current_choose_goods[3];
+						if(current_choose_goods[5] != 0)
+						{
+							openTradeCarGoodsShow.t_leftTime.text = current_choose_goods[5];
+						}												
+						openTradeCarGoodsShow.t_targetCity_arr = current_choose_target_city_arr;
+						openTradeCarGoodsShow.t_outCity.text = current_choose_city["name"];
+						openTradeCarGoodsShow.t_dist.text = "0";					
+						openTradeCarGoodsShow.t_buyCost.text = "0";
+						openTradeCarGoodsShow.t_earn.text = "0";
+						openTradeCarGoodsShow.t_lirun.text = "0";
+						openTradeCarGoodsShow.t_time.text = "0";					
+						openTradeCarGoodsShow.t_sellPrice.text = current_choose_goods[4];
+						openTradeCarGoodsShow.t_tranCost.text = "0";
+						openTradeCarGoodsShow.t_sui.text = "0";
+						openTradeCarGoodsShow.t_suilv.text = "0";
+						openTradeCarGoodsShow.t_amount.text = "1";
+						
+						openTradeCarGoodsShow.t_amount.enabled = false;
+						openTradeCarGoodsShow.t_amountUp.enabled = false;
+						
+						openTradeCarGoodsShow.t_targetCity.addEventListener(DropDownEvent.CLOSE, goodsSeleceTargetCityHandle);
+						openTradeCarGoodsShow.changeCar.addEventListener(MouseEvent.CLICK, tradeWindowChangeCar);
+						openTradeCarGoodsShow.createTradeBtn.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{
+																																	if(current_choose_car.length == 0 || String(openTradeCarGoodsShow.t_targetCity.selectedItem) == "undefined")
+																																	{
+																																		Alert.show("没有选择运输工具或者目的地","拉不了：");
+																																	}
+																																	else
+																																	{
+																																		SimFun.closeOpenCityWindow(event.currentTarget.parent);
+																																		createQueueCallBack(openTradeCarGoodsShow.t_targetCity.selectedItem.id, Number(openTradeCarGoodsShow.t_amount.text));																																		
+																																	}
+																																});
+						SimFun.openCityWindow(openTradeCarGoodsShow, this);
+					}
+				}				
+			}
+			//目标城市下拉列表选择
+			public function peopleSeleceTargetCityHandle(event:DropDownEvent):void
+			{
+				if(String(event.target.selectedItem) != "undefined")
+				{
+					if(current_choose_car.length != 0)
+					{
+						current_choose_target_city_id = event.target.selectedItem.id;
+						openTradeCarPeopleShow.t_amount.enabled = true;
+						openTradeCarPeopleShow.t_amountUp.enabled = true;
+						//取3个数中的最小值 ,车的装载量，货物剩余数量，可接收数量
+						var tempArr:Array = [];
+						tempArr.push(current_choose_car[6]);
+						tempArr.push(current_choose_goods[2]-current_choose_goods[3]);					
+						for(var i:String in rec_goods[current_choose_goods[0]])
+						{						
+							if(rec_goods[current_choose_goods[0]][i].id == current_choose_target_city_id)
+							{
+								tempArr.push(rec_goods[current_choose_goods[0]][i].rece[current_choose_goods[0]]);
+								break;
+							}
+						}
+						tempArr.sort(Array.NUMERIC);
+						openTradeCarPeopleShow.t_amount.addEventListener(KeyboardEvent.KEY_UP, function():void{
+																													if(Number(openTradeCarPeopleShow.t_amount.text) > tempArr[0] || Number(openTradeCarPeopleShow.t_amount.text) <= 0)
+																													{
+																														Alert.show("拉不了那么多", "超过上限");
+																														openTradeCarPeopleShow.t_amount.text = tempArr[0];
+																													}
+																													tradePeopleShowBoard();
+																												});
+						openTradeCarPeopleShow.t_amountUp.addEventListener(MouseEvent.CLICK, function():void{
+																												openTradeCarPeopleShow.t_amount.text = tempArr[0];
+																												tradePeopleShowBoard();
+																												});
+						tradePeopleShowBoard();
+					}
+					else
+					{
+						Alert.show("请先选择运输工具", "温馨提示：");
+					}
+				}
+			}
+			public function goodsSeleceTargetCityHandle(event:DropDownEvent):void
+			{
+				if(String(event.target.selectedItem) != "undefined")
+				{
+					if(current_choose_car.length != 0)
+					{
+						current_choose_target_city_id = event.target.selectedItem.id;
+						openTradeCarGoodsShow.t_amount.enabled = true;
+						openTradeCarGoodsShow.t_amountUp.enabled = true;
+						//取3个数中的最小值 ,车的装载量，货物剩余数量，可接收数量
+						var tempArr:Array = [];
+						tempArr.push(current_choose_car[6]);
+						tempArr.push(current_choose_goods[7]-current_choose_goods[8]);
+						for(var i:String in rec_goods[current_choose_goods[0]])
+						{						
+							if(rec_goods[current_choose_goods[0]][i].id == current_choose_target_city_id)
+							{
+								tempArr.push(rec_goods[current_choose_goods[0]][i].rece[current_choose_goods[0]]);
+								break;
+							}
+						}
+						tempArr.sort(Array.NUMERIC);
+						openTradeCarGoodsShow.t_amount.addEventListener(KeyboardEvent.KEY_UP, function():void{
+																													if(Number(openTradeCarGoodsShow.t_amount.text) > tempArr[0] || Number(openTradeCarGoodsShow.t_amount.text) <= 0)
+																													{
+																														Alert.show("拉不了那么多", "超过上限");
+																														openTradeCarGoodsShow.t_amount.text = tempArr[0];
+																													}																													
+																													tradeGoodsShowBoard();
+																												});
+						openTradeCarGoodsShow.t_amountUp.addEventListener(MouseEvent.CLICK, function():void{
+																													openTradeCarGoodsShow.t_amount.text = tempArr[0];
+																													tradeGoodsShowBoard();
+																												});
+						tradeGoodsShowBoard();
+					}
+					else
+					{
+						Alert.show("请先选择运输工具", "温馨提示：");
+					}
+				}
+			}
+			//拉人，显示面板变化
+			public function tradePeopleShowBoard():void
+			{
+				for(var i:String in rec_goods[current_choose_goods[0]])
+				{						
+					if(rec_goods[current_choose_goods[0]][i].id == current_choose_target_city_id)
+					{
+						//距离：
+						openTradeCarPeopleShow.t_dist.text = rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]] + "公里";
+						//运输时间
+						openTradeCarPeopleShow.t_time.text = SimFun.secondsToTimeFormat(Math.round(rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]] / current_choose_car[7] * 3600));
+						//票价
+						var pj:Number = current_choose_car[14] * rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]];
+						openTradeCarPeopleShow.t_buyPrice.text = String(pj) + "元";
+						//人数
+						var rs:Number = Number(openTradeCarPeopleShow.t_amount.text);
+						//收入预算  票价*人数
+						var srys:Number = pj * rs;						
+						openTradeCarPeopleShow.t_earn.text = String(srys) + "元";
+						//营业税 收入预算*目的地城市税率
+						var yys:Number = srys * rec_goods[current_choose_goods[0]][i].tax * 0.01;
+						openTradeCarPeopleShow.t_sui.text = String(yys) + "元";
+						//运输费 起步价+运行费用*里程
+						var ysf:Number = current_choose_car[11] + current_choose_car[12]*rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]];
+						//利润预算  收入预算-运输费-营业税
+						var lrys:Number = srys - ysf - yys;						
+						openTradeCarPeopleShow.t_lirun.text = String(lrys) + "元";
+						//利润率 利润预算/成本*100%
+						openTradeCarPeopleShow.t_suilv.text = String(Math.round(lrys / ysf * 100)) + "%";						
+					} 
+				}
+			}			
+			//拉货，显示面板变化
+			public function tradeGoodsShowBoard():void
+			{
+				for(var i:String in rec_goods[current_choose_goods[0]])
+				{
+					if(rec_goods[current_choose_goods[0]][i].id == current_choose_target_city_id)
+					{
+						//距离：
+						openTradeCarGoodsShow.t_dist.text = rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]] + "公里";
+						//运输时间
+						openTradeCarGoodsShow.t_time.text = SimFun.secondsToTimeFormat(Math.round(rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]] / current_choose_car[7] * 3600));
+						//采购费用 出厂价*数量
+						openTradeCarGoodsShow.t_buyCost.text = String(current_choose_goods[3] * Number(openTradeCarGoodsShow.t_amount.text)) + "元";
+						//运输费 起步价+运行费用*里程
+						var ysf:Number = current_choose_car[11] + current_choose_car[12]*rec_goods[current_choose_goods[0]][i].distance[current_choose_car[2]];
+						openTradeCarGoodsShow.t_tranCost.text = String(ysf) + "元";
+						//收入预算  零售价*数量
+						var srys:Number = current_choose_goods[4] * Number(openTradeCarGoodsShow.t_amount.text);
+						openTradeCarGoodsShow.t_earn.text = String(srys) + "元";
+						//营业税 收入预算*目的地城市税率
+						var yys:Number = srys * rec_goods[current_choose_goods[0]][i].tax * 0.01;
+						openTradeCarGoodsShow.t_sui.text = String(yys) + "元";
+						//成本 出产价格*数量+运输费
+						var cb:Number = current_choose_goods[3] * Number(openTradeCarGoodsShow.t_amount.text) + ysf;
+						//利润预算  收入预算-成本-营业税
+						var lrys:Number = srys - cb - yys;						
+						openTradeCarGoodsShow.t_lirun.text = String(lrys) + "元";
+						//利润率 利润预算/成本*100%
+						openTradeCarGoodsShow.t_suilv.text = String(Math.round(lrys / cb * 100)) + "%";
+					}
+				}
+			}
+			//交易界面换车
+			public var changeCarCallBackQueue:Array = new Array();
+			public function tradeWindowChangeCar(event:MouseEvent):void
+			{
+				Ccontect.c2s_getfreequeue(this.parentApplication.myself_uid,String(current_choose_city["tools_type"]),current_choose_city["id"],current_choose_goods[0]);
+			}
+			//换车返回
+			public function getFreeQueueCallBack(event:*,target:*):void
+			{
+				rec_goods = target.rece_citys;				
+				var k:int = 0;
+				for(var i:String in target.tool_list)
+				{
+					changeCarCallBackQueue[k] = target.tool_list[i];
+					changeCarCallBackQueue[k].push(i);
+					k++;
+				}
+				var tradeChangeCarWindow:tradeChangeCar = new tradeChangeCar();
+				SimFun.openCityWindow(tradeChangeCarWindow, this);
+				tradeChangeCarWindow.change(0);
+			}
+			//交易
+			public function createQueueCallBack(arrive_city:Number, goods_count:Number):void
+			{
+				Ccontect.c2s_getcreatequeue(this.parentApplication.myself_uid,
+											this.parentApplication.current_show_uid,
+											current_choose_car[15],
+											current_choose_goods[0],
+											goods_count,
+											current_choose_city["id"],
+											arrive_city);
+			}
+			//交易返回
+			public function getCreateQueueCallBack(event:*,target:*):void
+			{
+				switch(target.queue_list)
+				{
+					case 0:
+						Alert.show("此交通工具已经到报废了");
+						break;
+					case -1:
+						Alert.show("所运送的货物在两城镇之间的产出或接收当前值达到上限，目的城镇接收值满了或者开始城镇产出值满了");
+						break;
+					case -2:
+						Alert.show("选定交通工具在两城镇之间不通行");
+						break;
+					case -3:
+						Alert.show("当前交通工具正在运输状态中");
+						break;
+					case -4:
+						Alert.show("当前交通工具的总里程数达到上限");
+						break;
+					case -5:
+						Alert.show("当前现金不足以支付本次运输成本");
+						break;
+					default:
+						break;
+				}
+				showHideTransPort(true);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<!--地图-->
+	<s:Group width="760" height="600" id="game_mapbg" />
+	<!--选择地图按钮-->
+	<s:Group width="70" height="180" id="game_mapChoose" x="674" y="307" visible="false">
+		<mx:Image source="@Embed(source='images/btn/bt_town.gif')" width="49" height="43"  x="8" y="11" buttonMode="true" click="loadMap(1)"/>
+		<mx:Image source="@Embed(source='images/btn/bt_city.gif')" width="49" height="43"  x="7" y="66" buttonMode="true" click="loadMap(2)"/>
+		<mx:Image source="@Embed(source='images/btn/bt_country.gif')" width="49" height="43"  x="8" y="124" buttonMode="true" click="loadMap(3)"/>
+	</s:Group>	
+	<!--中间运输面板容器-->
+	<s:Group x="0" y="0" width="760" height="600" id="game_middleTransportbox">
+		<s:Rect left="0" top="89" width="760" height="431">
+			<s:fill>
+				<mx:SolidColor color="0xFFFFFF" alpha="0.01"></mx:SolidColor>
+			</s:fill>
+		</s:Rect>		
+		<mx:Image x="73" y="97" source="@Embed(source='images/bg/bg_yunshu.png')"/>
+		<mx:Image x="360" y="90" source="@Embed(source='images/j_cate/qiche.png')" buttonMode="true" click="now_car_category=0;now_car_page=1;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);"/>
+		<mx:Image x="418" y="92" source="@Embed(source='images/j_cate/huoche.png')" buttonMode="true" click="now_car_category=1;now_car_page=1;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);"/>
+		<mx:Image x="480" y="89" source="@Embed(source='images/j_cate/lunchuan.png')" buttonMode="true" click="now_car_category=2;now_car_page=1;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);"/>
+		<mx:Image x="536" y="90" source="@Embed(source='images/j_cate/feiji.png')" buttonMode="true" click="now_car_category=3;now_car_page=1;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid);"/>	
+		<s:VGroup x="120" y="137" width="494" height="265" gap="3" id="game_transmainBox"></s:VGroup>
+		<mx:Image x="622" y="175" source="@Embed(source='images/ico/piror.gif')" buttonMode="true" click="now_car_page=1;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid)"/>
+		<mx:Image x="622" y="242" source="@Embed(source='images/ico/next.gif')" buttonMode="true" click="now_car_page=2;Ccontect.c2s_showqueue(now_car_category,now_car_page-1,this.parentApplication.current_show_uid)"/>
+
+		<s:HGroup x="112" y="415" width="490" height="75" gap="1" id="game_cardBox"></s:HGroup>
+		<s:HScrollBar x="611" y="442" viewport="{game_cardBox}" skinClass="newSkin.cardScrollBar" id="game_cardBox_scrollBar" stepSize="1"/>
+
+	</s:Group>
+	<!--运输面板按钮-->
+	<mx:Image id="game_yunshuBtn" x="18" y="168" source="@Embed(source='images/btn/btn_yunshu.gif')" buttonMode="true" click="showHideTransPort(true)"/>
+	<!--头部-->
+	<component:top x="0" y="0" id="game_top"></component:top>
+	
+	
+	<!--底部测试-->
+	<s:Group left="0" top="520" width="760" height="80">	
+		<s:Rect width="760" height="80">
+			<s:fill>
+				<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+			</s:fill>		
+		</s:Rect>
+		<s:Button x="26" y="15" label="自己" click="changeUser(this.parentApplication.myself_uid);"/>
+		<s:Button x="27" y="47" label="100005" click="changeUser(100005);"/>
+		<s:Button x="677" y="47" label="退出" click="Ccontect.c2s_loginout(this.parentApplication.myself_uid);"/>
+		
+	</s:Group>
+</mx:Module>

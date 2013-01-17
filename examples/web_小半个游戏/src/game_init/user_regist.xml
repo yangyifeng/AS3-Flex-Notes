@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<game>
+	<head>
+		<sex>0</sex>
+		<pic>images/head/baojixing_nv2.gif</pic>
+	</head>
+	<head>
+		<sex>0</sex>
+		<pic>images/head/dantiaoxing_nv2.gif</pic>
+	</head>
+	<head>
+		<sex>0</sex>
+		<pic>images/head/jiangjunxing_nv2.gif</pic>
+	</head>
+	<head>
+		<sex>0</sex>
+		<pic>images/head/nvmingxixngxing2.gif</pic>
+	</head>
+	<head>
+		<sex>0</sex>
+		<pic>images/head/xianhuixing2.gif</pic>
+	</head>
+	<head>
+		<sex>1</sex>
+		<pic>images/head/baojixing_nan2.gif</pic>
+	</head>
+	<head>
+		<sex>1</sex>
+		<pic>images/head/dantiaoxing_nan2.gif</pic>
+	</head>
+	<head>
+		<sex>1</sex>
+		<pic>images/head/guijixing_nan2.gif</pic>
+	</head>
+	<head>
+		<sex>1</sex>
+		<pic>images/head/junshixing_nan2.gif</pic>
+	</head>
+	<head>
+		<sex>1</sex>
+		<pic>images/head/mangfuxing_nan2.gif</pic>
+	</head>	
+</game>

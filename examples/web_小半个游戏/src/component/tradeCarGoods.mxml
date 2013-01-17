@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" xmlns:compages="compages.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import component.useCard;
+			
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]public var t_targetCity_arr:ArrayCollection = new ArrayCollection([{name:""}]);
+			
+			private function cardUseEffect():void
+			{
+				var useCardShow:useCard = new useCard();
+				useCardShow.card.source = "images/card/xiuli2.gif";
+				SimFun.useCardWindow(useCardShow,this);
+			}
+			private function changeGoods():void
+			{
+				SimFun.closeOpenCityWindow(this);
+				var c_c_car_id:String = "";
+				if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_car.length != 0)
+				{
+					var arr_length:int = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_car.length;
+					c_c_car_id = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_car[arr_length-1];
+				}
+				Ccontect.c2s_getcityinfos(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_city["id"],c_c_car_id);
+			}			
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenCityWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<s:Label x="166" y="319" text="采购单价："/>
+	<s:Label x="166" y="339" text="采购费用："/>
+	<s:Label x="166" y="359" text="收入预算："/>
+	<s:Label x="166" y="379" text="利润预算："/>
+	<s:Label x="236" y="319" text="300/公斤" id="t_buyPrice"/>
+	<s:Label x="236" y="339" text="50000元" id="t_buyCost"/>
+	<s:Label x="236" y="359" text="1500000元" id="t_earn"/>
+	<s:Label x="236" y="379" text="35600元" id="t_lirun"/>
+	<s:Label x="366" y="319" text="销售单价："/>
+	<s:Label x="366" y="339" text="运输费用："/>
+	<s:Label x="366" y="359" text="营业税："/>
+	<s:Label x="366" y="379" text="利润率："/>
+	<s:Label x="442" y="319" text="3.5元/公斤" id="t_sellPrice"/>
+	<s:Label x="442" y="339" text="2000元" id="t_tranCost"/>
+	<s:Label x="442" y="359" text="250元" id="t_sui"/>
+	<s:Label x="442" y="379" text="85%" id="t_suilv"/>
+	<s:Label x="442" y="299" text="无限" id="t_leftTime"/>
+	<s:Label x="442" y="279" text="25：23：50" id="t_time"/>
+	<s:Label x="366" y="299" text="生命期："/>
+	<s:Label x="366" y="259" text="到达地："/>
+	<s:Label x="366" y="279" text="运输时间："/>
+	<s:Label x="236" y="299" text="苹果" id="t_goods"/>
+	<s:Label x="236" y="259" text="虎门" id="t_outCity"/>
+	<s:Label x="236" y="279" text="130公里" id="t_dist"/>
+	<s:Label x="166" y="429" text="运输数量："/>
+	<s:Label x="166" y="299" text="货物："/>
+	<s:Label x="282" y="158" text="东风小霸王" fontSize="14" id="t_carName" color="#FF0000" fontWeight="bold"/>
+	<mx:Image x="185" y="158" source="images/j_sub/qiche1.gif" buttonMode="true" id="t_carPic"/>
+	<s:Label x="166" y="259" text="出发地："/>
+	<s:Label x="166" y="279" text="距离："/>
+	<s:TextInput x="234" y="424" width="50" id="t_amount" text="1"/>
+	<s:Button x="292" y="426" label="最大" width="46" buttonMode="true" id="t_amountUp" skinClass="newSkin.commonBtn"/>
+	<s:Button x="302" y="253" label="更换" width="50" buttonMode="true" click="SimFun.closeOpenCityWindow(this)" skinClass="newSkin.commonBtn"/>
+	<s:Button x="302" y="293" label="换货" width="50" buttonMode="true" click="changeGoods()" skinClass="newSkin.commonBtn"/>
+	<s:Button x="223" y="478" label="确定" buttonMode="true" id="createTradeBtn" skinClass="newSkin.commonBtn"/>
+	<s:Button x="379" y="478" label="双倍卡" buttonMode="true" click="cardUseEffect()" enabled="false" skinClass="newSkin.commonBtn"/>
+	<s:DropDownList x="438" y="250" id="t_targetCity" dataProvider="{t_targetCity_arr}" labelField="name"></s:DropDownList>
+	<s:Button x="282" y="180" label="选车/换车" id="changeCar" buttonMode="true"  skinClass="newSkin.commonBtn"/>
+</s:Group>

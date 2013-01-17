@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<game>
+	<!-- 来源 -->
+	<comefrom>0</comefrom>
+	<!-- 平台登录，跳转到游戏，游戏向平台发起的验证地址 -->
+	<webtogame>http://www.ixoyo.com/ysdh.php?type=webtogame</webtogame>
+	<!-- 游戏登录，游戏向平台发起的验证地址 -->
+	<gametoweb>http://www.ixoyo.com/ysdh.php?type=gametoweb</gametoweb>
+	<!-- 游戏注册链接地址 -->
+	<registurl>http://bbs.ixoyo.com/register.php</registurl>	
+	<!-- 官网地址 -->
+	<weburl>http://www.ixoyo.com/</weburl>
+	<!-- 论坛地址 -->
+	<bbsurl>http://bbs.ixoyo.com/</bbsurl>
+	<!-- 充值地址 -->
+	<payurl>http://pay.ixoyo.com/</payurl>
+	<!-- 服务器IP -->
+	<serverip>192.168.100.250</serverip>
+	<!-- 服务器端口 -->
+	<serverport>3800</serverport>
+</game>

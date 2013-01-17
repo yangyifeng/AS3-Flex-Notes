@@ -1,0 +1,28 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+global
+{
+	font-family:宋体;
+	font-size:12px;
+}
+s|Label
+{
+	font-family:宋体;
+	font-size:12px;
+}
+
+s|TextInput
+{
+	font-family:宋体;
+	font-size:12px;
+}
+
+mx|ToolTip
+{
+	font-size:12px;
+	background-color:#000000;
+	background-alpha:0.8;
+	color:#FFFFFF;
+}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="400" minHeight="400" width="400" height="400">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		*{font-size:12px}
+		
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[			
+			
+			import mx.effects.Move;
+			import mx.events.EffectEvent;
+			
+			public function moveRight():void
+			{
+				var mover:Move = new Move();
+				mover.target = aspic;1
+				mover.xTo = 380;
+				mover.duration = 2000;				
+				mover.play();
+				
+				
+			}
+			
+			public function moveLeft():void
+			{
+				var mover:Move = new Move()
+				mover.target = aspic;
+				mover.xTo = 0;
+				mover.duration = 2000;				
+				mover.play();
+			}
+		]]>
+	</fx:Script>
+	
+	
+	<mx:Image x="0" y="199" source="@Embed('a.gif')" width="24" height="24" id="aspic"/>
+	<s:Button x="133" y="301" label="-&gt;" buttonMode="true" click="moveRight()"/>
+	<s:Button x="231" y="300" label="&lt;-" buttonMode="true" click="moveLeft()"/>
+	<s:RichText x="102" y="112" text="RichText"/>
+	<s:RichEditableText x="231" y="161" text="RichEditableText"/>
+</s:Application>

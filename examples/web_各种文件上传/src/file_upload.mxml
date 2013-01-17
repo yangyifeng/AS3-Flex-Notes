@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" creationComplete="init()">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+		<s:RadioButtonGroup id="fileTypeRBG" itemClick="FileTypeChangedHandler(event)"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.net.FileReference;
+			import flash.net.URLVariables;
+			
+			import mx.controls.Alert;
+			import mx.events.ItemClickEvent;
+			
+			private var file:FileReference=new FileReference();
+			//文件类型过滤器
+			private var typeFilter:FileFilter;
+			private var uploadURL:String="./file_upload/upload.php";
+			private var progressBarWidth:Number=100;
+			
+			private function init():void{
+				upload_btn.enabled=false;
+				typeFilter=getTypeFilter("Images");
+				file.addEventListener(Event.SELECT,fileSelected);	//文件选择
+				file.addEventListener(Event.CANCEL,fileCancelled);	//文件取消选择
+				file.addEventListener(Event.COMPLETE,fileCompleted);	//文件上传完成
+				file.addEventListener(HTTPStatusEvent.HTTP_STATUS,httpStatusHandler);	//HTTP错误，当出现其他错误时，savefile.php也会发出404错误
+				file.addEventListener(SecurityErrorEvent.SECURITY_ERROR,securityErrorHandler);	//安全错误
+				file.addEventListener(IOErrorEvent.IO_ERROR,ioErrorHandler);	//文件读写错误
+				file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,uploadCompleteDataHandler);	//当数据已发送且服务器响应后进行分派
+				file.addEventListener(ProgressEvent.PROGRESS,fileProgress);	//文件正在上传事件
+			}
+			
+			private function fileSelected(evt:Event):void{
+				filename_txt.text=file.name;
+				upload_btn.enabled=true;
+				showTips("已选择文件："+file.name+"  大小为 "+deal_size(file.size));
+			}
+			
+			private function fileProgress(evt:ProgressEvent):void{
+				var tempLoaded:Number=evt.bytesLoaded;	//已上传的字节数
+				var total:Number=evt.bytesTotal;
+				showTips("文件正在上传"+file.name+"\n已上传  "+Math.floor(tempLoaded*100/total)+"%");
+				drawRect(tempLoaded,total);
+			}
+			private function fileCancelled(evt:Event):void{
+				filename_txt.text="";
+				showTips("取消选择文件");
+			}
+			private function fileCompleted(evt:Event):void{
+				showTips("文件上传完成100%");
+			}
+			
+			private function showTips(s:String):void{
+				tips_lbl.text=s;
+			}
+			private function httpStatusHandler(evt:HTTPStatusEvent):void{
+				showTips("文件上传失败！"+evt.status);
+			}
+			private function securityErrorHandler(evt:SecurityErrorEvent):void{
+				showTips("安全设置错误"+evt.text);
+			}
+			private function ioErrorHandler(evt:IOErrorEvent):void{
+				showTips("文件上传失败"+file.name+"Error:文件 I/O错误");
+			}
+			private function uploadCompleteDataHandler(evt:DataEvent):void{
+				
+			}
+			
+			//处理文件的大小
+			private function deal_size(s:Number):String{
+				var danwei:Array=["Byte","KB","MB","GB"];
+				var d:int=0;
+				while(s>=900){
+					s=Math.round(s*100/1024)/100;
+					d++;
+				}
+				return String(s)+" "+danwei[d];
+			}
+			
+			//画上传进度条
+			private function drawRect(i:Number,t:Number):void{
+				var per:Number=Math.floor(i*100/t)/100;
+				progress_bar.width=progressBarWidth*per;
+			}
+			
+			//浏览文件
+			private function BrowseFile():void{
+				//将上一次上传的文件进度条宽度置为0；
+				progress_bar.width=0;
+				file.browse(getType());
+			}
+			//获得文件类型
+			private function getType():Array{
+				var typeArray:Array=new Array();
+				typeArray.push(typeFilter);
+				return typeArray;
+			}
+			//根据选择的文件类型过滤文件
+			private function getTypeFilter(s:String):FileFilter{
+				var filter:FileFilter;
+				switch(s){
+					case "Images":
+						filter=new FileFilter(s,"*.jpg;*.gif;*.png;*.jpeg");
+						break;
+					case "Documents":
+						filter=new FileFilter(s,"*.doc;*.txt;*.pdf;*.docx;*.xls;*.xlsx;*.ppt;*.pptx");
+						break;
+					case "SWF":
+						filter=new FileFilter(s,"*.swf");
+						break;
+					case "Musics":
+						filter=new FileFilter(s,"*.mp3;*.wma;");
+						break;
+					case "Movies":
+						filter=new FileFilter(s,"*.rm;*.rmvb;*.3gp");
+						break;
+				}
+				
+				return filter;
+			}
+			
+			private function FileTypeChangedHandler(evt:ItemClickEvent):void{
+				var s:String="";
+				switch(evt.target.selection.label){
+					case "图片":
+						s="Images";
+						break;
+					case "文档":
+						s="Documents";
+						break;
+					case "swf动画":
+						s="SWF";
+						break;
+					case "音乐":
+						s="Musics";
+						break;
+					case "影视":
+						s="Movies";
+						break;
+				}
+				typeFilter=getTypeFilter(s);
+			}
+			
+			private function UploadFile():void{
+				var url:URLRequest=new URLRequest(uploadURL);
+				file.upload(url);
+			}
+		]]>
+	</fx:Script>
+	<mx:Canvas id="progress_bar" height="10" x="234" y="300" backgroundColor="#00ee00" borderStyle="none"/>
+	<s:Button x="488" y="231" label="浏览" id="browse_btn" click="BrowseFile()"/>
+	<s:TextInput x="234" y="231" id="filename_txt" width="224" editable="false"/>
+	<s:Button x="586" y="231" label="开始上传" id="upload_btn" click="UploadFile()"/>
+	<s:Label x="234" y="272" id="tips_lbl"/>
+	<s:Label x="234" y="169" text="上传的文件类型："/>
+	<s:Label x="234" y="206" text="请选择要上传的文件"/>
+	<s:RadioButton x="338" y="163" label="图片" groupName="fileTypeRBG" selected="true"/>
+	<s:RadioButton x="404" y="163" label="文档" groupName="fileTypeRBG"/>
+	<s:RadioButton x="471" y="163" label="swf动画" groupName="fileTypeRBG"/>
+	<s:RadioButton x="557" y="163" label="音乐" groupName="fileTypeRBG"/>
+	<s:RadioButton x="625" y="165" label="影视" groupName="fileTypeRBG"/>
+	<mx:LinkButton x="234" y="100" label="查看已经上传文件" click="navigateToURL(new URLRequest('./file_upload/upload'), '_blank');"/>
+	<!--
+	示例php文件
+	<?php
+	if(isset($_FILES["Filedata"]["tmp_name"]) && $_FILES["Filedata"]["tmp_name"] != '')
+	{
+	move_uploaded_file($_FILES["Filedata"]["tmp_name"], "upload/" . $_FILES["Filedata"]["name"]);	
+	echo "success";
+	}
+	?>
+	-->
+</s:Application>

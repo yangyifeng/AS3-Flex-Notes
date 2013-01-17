@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="200" height="180">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import mx.controls.Alert;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			
+			/**
+			 * 0：金币
+			 * 1：元宝
+			 * */
+			
+			private var buy_type:int = 0;
+			
+			private function buy():void
+			{
+				var typei:String = "";
+				if(buy_type == 0)
+				{
+					typei = "金币";
+				}
+				else
+				{
+					typei = "元宝";
+				}
+				Alert.show("确定通过"+typei+"购买"+car_name.text+"吗？车的串号是："+this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_buy_seat_id,"购买提示：",Alert.YES|Alert.NO, null, buySure);
+			}
+			
+			private function buySure(event:CloseEvent):void
+			{
+				if(event.detail == Alert.YES)
+				{
+					SimFun.closeOpenWindow(this.parent.parent as IFlexDisplayObject)
+					Ccontect.c2s_buyvehicles(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_buy_seat_id, car_id.text, buy_type, this.parentApplication.myself_uid);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="200" height="180">
+		<s:fill>
+			<mx:SolidColor color="0xffc000"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<s:Rect left="2" top="2" width="196" height="176">
+		<s:fill>
+			<mx:SolidColor color="0x000000"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image x="10" y="9" source="images/j_sub/qiche1.gif" />
+	<s:Label x="90" y="10" text="安达小卡车" color="#FFFFFF" id="car_name"/>
+	<s:Label x="10" y="59" text="速度：" color="#00B0F0" />
+	<s:Label x="10" y="76" text="装载量：" color="#00B0F0" />
+	<s:Label x="10" y="93" text="最大里程：" color="#00B0F0" />
+	<s:Label x="88" y="59" text="90km/h" color="#FFFFFF" id="car_speed"/>
+	<s:Label x="88" y="76" text="10件" color="#FFFFFF" id="car_load"/>
+	<s:Label x="87" y="95" text="5000km" color="#FFFFFF" id="car_max_run"/>
+	<s:Label x="10" y="121" text="$20000" color="#FFFFFF" id="car_cash"/>
+	<s:Button x="83" y="116" label="金币购买" buttonMode="true" click="buy_type=0;buy()"/>
+	<s:Label x="10" y="150" text="￥50" color="#FFFFFF" id="car_coupon"/>
+	<s:Button x="83" y="145" label="点券购买" buttonMode="true" click="buy_type=1;buy()"/>
+	
+	<!--标记-->
+	<s:Label x="161" y="457" id="car_level" visible="false"/>
+	<s:Label x="161" y="457" id="car_id" visible="false"/>
+</s:Group>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" creationComplete="maptownApp()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import mx.controls.SWFLoader;
+			import mx.core.IVisualElement;
+			
+			private var map_town_loader:SWFLoader = new SWFLoader();
+			
+			private var downXY:Point = new Point();
+			private var upXY:Point = new Point();
+			
+			private function maptownApp():void
+			{
+				map_town_loader.addEventListener(Event.COMPLETE, loadEndHandle);
+				map_town_loader.load("images/map/map_town.swf");
+			}
+			private function loadEndHandle(event:Event):void
+			{
+				this.addElement(event.target as IVisualElement);
+				map_town_loader.x = 0;
+				map_town_loader.y = 0;
+				
+				var maptownload:MovieClip = event.target.content as MovieClip;
+				maptownload.addEventListener(MouseEvent.CLICK, maptownClickHandle);				
+				event.target.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
+			}
+			private function maptownClickHandle(event:MouseEvent):void
+			{
+				if(uint(downXY.length - upXY.length) < 10)
+				{
+					var target_name:String = event.target.name.toString();
+					var target_id:Array = target_name.split("_");
+					Ccontect.c2s_getcityinfos(Number(target_id[1]),this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].record_now_seat_id);
+				}
+			}	
+			
+			//拖动地图
+			private function mouseDownHandler(event:MouseEvent):void
+			{
+				downXY = new Point(mouseX,mouseY);
+				event.currentTarget.startDrag(false, new Rectangle (0, 0, stage.stageWidth - event.currentTarget.width, stage.stageHeight-event.currentTarget.height ));
+				stage.addEventListener(MouseEvent.MOUSE_UP , mouseUpHandler);
+			}
+			private function mouseUpHandler(event:MouseEvent):void
+			{
+				upXY = new Point(mouseX,mouseY);
+				stopDrag();
+				stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
+			}
+		]]>
+	</fx:Script>
+	
+</s:Group>

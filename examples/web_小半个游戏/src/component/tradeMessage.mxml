@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" xmlns:compages="compages.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.common.SimFun;
+			
+			import newSkin.commonBtn;			
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<mx:Image source="images/sub_page/yunzaixinxi.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<mx:Image x="199" y="166" source="images/j_sub/qiche1.gif" id="t_pic"/>
+	<s:Label x="294" y="166" id="t_name"/>
+	<s:Label x="304" y="228" id="t_goods" verticalAlign="middle" height="16"/>
+	<s:Label x="305" y="250" id="t_road" height="16" verticalAlign="middle"/>
+	<s:Label x="306" y="271" id="t_dist" height="16" verticalAlign="middle"/>
+	<s:Label x="306" y="292" id="t_time" verticalAlign="middle" height="16"/>
+	<s:Label x="308" y="331" id="t_price" verticalAlign="middle" height="16"/>
+	<s:Label x="308" y="354" id="t_cost" verticalAlign="middle" height="16"/>
+	<s:Label x="309" y="375" id="t_reccost" verticalAlign="middle" height="16"/>
+	<s:Label x="310" y="398" id="t_pay" verticalAlign="middle" height="16"/>
+	<s:Label x="311" y="420" id="t_sui" verticalAlign="middle" height="16"/>
+	<s:Label x="311" y="442" id="t_lirun" verticalAlign="middle" height="16"/>
+	<s:Button x="257" y="478" label="加速" id="t_addSpeed" buttonMode="true" skinClass="newSkin.commonBtn"/>
+	<s:Button x="372" y="478" label="改道" id="t_modi" buttonMode="true" skinClass="newSkin.commonBtn"/>
+	
+	<s:Label id="seat_id" visible="false"/>
+</s:Group>

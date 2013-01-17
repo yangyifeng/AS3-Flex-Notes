@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" xmlns:compages="compages.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import com.common.SimFun;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			
+			import newSkin.commonCloseBtn;
+			
+			private function rename():void
+			{
+				if(c_name.text == "")
+				{
+					Alert.show("车的名字为空！","改不了");
+				}
+				else
+				{
+					Alert.show("改名需要消耗10点券！","提示：",1|3, null, renameSure);
+				}
+			}
+			
+			private function renameSure(event:CloseEvent):void
+			{
+				if(event.detail == Alert.YES)
+				{
+					if(this.parentApplication.show_cash < 10)
+					{
+						Alert.show("不足10点券，不能修改名字", "提示");
+					}
+					else
+					{
+						Ccontect.c2s_renamevehicles(this.parentApplication.myself_uid, 
+													this.parentApplication.current_show_uid,
+													seat_id.text,
+													c_name.text);
+					}					
+				}
+			}
+			private function drop():void
+			{
+				Alert.show("确定要丢弃" + c_name.text + "吗？","提示：",1|3, null, dropSure);
+			}
+			private function dropSure(event:CloseEvent):void
+			{
+				if(event.detail == Alert.YES)
+				{
+					Ccontect.c2s_dicevehicles(this.parentApplication.myself_uid, 
+												this.parentApplication.current_show_uid,
+												seat_id.text);
+					SimFun.closeOpenWindow(this);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<mx:Image source="images/sub_page/cheliangxiangxixinxi.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<mx:Image x="200" y="158" source="images/j_sub/qiche1.gif"/>
+	<s:Label x="292" y="236" text="5人" id="c_load"/>
+	<s:Label x="292" y="256" text="500公里/小时" id="c_speed"/>
+	<s:Label x="292" y="278" text="10%" id="c_curr_relia"/>
+	<s:Label x="294" y="302" text="30000元" id="c_curr_resi"/>
+	<s:Label x="294" y="322" text="12000公里" id="c_max_miles"/>
+	<s:Label x="296" y="345" text="2000元" id="c_base_cost"/>
+	<s:Label x="296" y="368" text="10元/公里" id="c_run_cost"/>
+	<s:Label x="297" y="390" text="3000元" id="c_day_profit"/>
+	<s:Label x="296" y="410" text="18000元" id="c_week_profit"/>
+	<s:Label x="294" y="435" text="640000元" id="c_totall_profit"/>
+	<s:Button x="420" y="208" label="改名" id="c_rename" click="rename()"  skinClass="newSkin.commonBtn"/>	
+	<s:Button x="277" y="492" label="改装" enabled="false"  skinClass="newSkin.commonBtn"/>
+	<s:Button x="392" y="492" label="丢弃" click="drop()"  skinClass="newSkin.commonBtn"/>
+	<s:TextInput x="255" y="207" width="152" id="c_name"/>
+	<s:Button x="286" y="462" label="维修" id="c_repair" enabled="false"  skinClass="newSkin.commonBtn"/>
+	<s:Button x="360" y="462" label="保养" id="c_feed" enabled="false"  skinClass="newSkin.commonBtn"/>
+	<s:Button x="434" y="462" label="加油" id="c_addoil" enabled="false" skinClass="newSkin.commonBtn"/>
+	
+	<s:Label id="seat_id" visible="false" x="0" y="-10"/>
+</s:Group>

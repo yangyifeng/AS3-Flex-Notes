@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="484" height="50">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			public static var maski:Boolean = true;
+		]]>
+	</fx:Script>
+	
+	<mx:Image source="images/ico/che_yes.png" />
+	<s:Label x="10" y="10" text="" width="29" height="30" verticalAlign="middle" textAlign="center" id="car_order"/>
+	<mx:Image x="44" y="4" source="" id="car_pic" buttonMode="true"/>
+	<mx:Image x="130" y="4" source="" id="car_goods"/>
+	<s:Label x="191" y="12" text="" height="35" width="79" verticalAlign="middle" id="car_city"/>
+	<s:Label x="274" y="12" text="" height="35" width="79" verticalAlign="middle" id="car_time"/>	
+	<mx:Image x="278" y="17" source="images/ico/qian.jpg" buttonMode="true" id="car_getMoney" visible="false" toolTip="拿钱去!" />
+	<mx:Image x="370" y="6" source="images/card_big/xiuli.gif" id="car_cardLeft2"  enabled="false" alpha="0.5" visible="false" toolTip="维修"/>
+	<mx:Image x="370" y="6" source="images/card_big/baoyang.gif" id="car_cardLeft"  enabled="false" alpha="0.5" toolTip="保养"/>
+	<mx:Image x="429" y="6.35" source="images/card_big/jiayou.gif" id="car_cardRight"  enabled="false" alpha="0.5" toolTip="加油"/>
+	<mx:Image x="209" y="15" source="images/ico/create.png" id="car_createQueue" visible="false" buttonMode="true"/>
+	<!--标记-->
+	<s:Label id="order" visible="false" />
+	<s:Label id="seat_id" visible="false"/>
+	
+	<s:Rect left="0" top="0" width="484" height="50" visible="false" id="maski">
+		<s:fill>
+			<mx:SolidColor color="0xFF0000" alpha="0.5"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>	
+</s:Group>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="69" height="75" textAlign="center">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			import flash.filters.GlowFilter;
+			
+		]]>
+	</fx:Script>
+	<mx:Image x="0" y="0" source="images/card_big/kapian.png" />
+	<mx:Image x="7" y="7" source="images/card_big/5.gif" id="card_pic" buttonMode="true"/>
+	<s:Rect left="0" top="50" width="65" height="16">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.5"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<s:Label id="card_text" x="0" y="50" text="3" filters="{[new GlowFilter(0x000000,0.7)]}" color="0xFFFFFF" width="65" textAlign="center" height="16" verticalAlign="middle"/>
+	<s:Label id="card_id" visible="false" />
+	<s:Label id="card_num" visible="false" />
+</s:Group>

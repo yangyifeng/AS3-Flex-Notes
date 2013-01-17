@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" creationComplete="change(0)">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.SimFun;
+			
+			private function pay():void
+			{
+				navigateToURL(new URLRequest(this.parentApplication.g_i_payurl),"_blank");
+			}
+			
+			/**
+			 * 0表示小型 1表示中型 2表示高级 3表示特级
+			 * */
+			
+			private function change(car_level:int):void
+			{
+				content.removeAllElements();
+				for(var i:int=0; i< this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].buy_car_callback.length; i++)
+				{
+					if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].buy_car_callback[i].car_level.text == String(car_level))
+					{
+						content.addElement(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].buy_car_callback[i]);
+					}
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<s:Button x="163" y="113" label="小型" buttonMode="true" click="change(0)"/>
+	<s:Button x="243" y="113" label="中型" buttonMode="true" click="change(1)"/>
+	<s:Button x="325" y="113" label="大型" buttonMode="true" click="change(2)"/>
+	<s:Button x="404" y="113" label="特级" buttonMode="true" click="change(3)"/>
+	
+	<s:VScrollBar x="589" y="161" minimum="0" maximum="1" stepSize="0.5" pageSize="0" height="279" viewport="{content}"/>
+	<s:TileGroup height="279" width="407" x="161" y="161" id="content"></s:TileGroup>
+	
+	<s:Button x="425" y="467" label="快速充值" click="pay()" buttonMode="true"  skinClass="newSkin.commonBtn"/>
+	<s:Label x="161" y="457" text="剩余元宝："/>
+	<s:Label x="161" y="482" text="剩余金币："/>
+	<s:Label x="229" y="457" text="{this.parentApplication.show_cash}"/>
+	<s:Label x="229" y="482" text="{this.parentApplication.show_asse}"/>		
+</s:Group>

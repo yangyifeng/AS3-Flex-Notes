@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600" xmlns:compages="compages.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[		
+			import com.common.SimFun;
+			public function change(car_type:int):void
+			{
+				change_carBox.removeAllElements();
+				for(var i:int=0; i< this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue.length; i++)
+				{
+					if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][2] == car_type)
+					{
+						var carpic:Image = new Image();
+						carpic.id = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][0];
+						carpic.source = "images/j_sub/qiche1.gif";
+						carpic.toolTip = "id: " + this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][0] + "\n"
+										+ "名称： " + this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][1] + "\n"
+										+ "装载量： " + this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][6] + "\n"
+										+ "速度： " + this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][7];
+						carpic.buttonMode = true;
+						
+						carpic.addEventListener(MouseEvent.CLICK, choosecar);						
+						change_carBox.addElement(carpic);
+					}
+				}
+			}
+			private function choosecar(event:MouseEvent):void
+			{
+				this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_car.length = 0;
+				for(var i:int=0; i< this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue.length; i++)
+				{
+					if(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i][0] == event.currentTarget.id)
+					{
+						this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].current_choose_car = this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].changeCarCallBackQueue[i];
+					}
+				}
+				SimFun.closeOpenCityWindow(this);
+				this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].sure_trade();
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image source="images/sub_page/2jijiemian.png" width="457" height="475"  y="80" x="137"/>
+	<s:Button x="487" y="89" label="关闭" click="SimFun.closeOpenCityWindow(this)" buttonMode="true" skinClass="newSkin.commonCloseBtn"/>
+	
+	<mx:Image x="200" y="173" source="@Embed(source='images/j_cate/qiche.png')" buttonMode="true" click="change(0)" />
+	<mx:Image x="258" y="175" source="@Embed(source='images/j_cate/huoche.png')" buttonMode="true" click="change(1)"/>
+	<mx:Image x="320" y="172" source="@Embed(source='images/j_cate/lunchuan.png')" buttonMode="true" click="change(2)"/>
+	<mx:Image x="376" y="173" source="@Embed(source='images/j_cate/feiji.png')" buttonMode="true" click="change(3)"/>	
+	
+	<s:HGroup x="171" y="254" width="435" height="71" gap="5" id="change_carBox"></s:HGroup>
+	<s:HScrollBar x="180" y="355" viewport="{change_carBox}" skinClass="newSkin.cardScrollBar" id="game_cardBox_scrollBar" stepSize="1"/>
+
+</s:Group>

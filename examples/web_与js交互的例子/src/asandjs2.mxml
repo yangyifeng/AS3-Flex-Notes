@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="400" minHeight="400" width="400" height="400" creationComplete="app()">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.external.ExternalInterface;
+			
+			import mx.effects.Move;
+			import mx.events.EffectEvent;
+			
+			public function app():void
+			{
+				ExternalInterface.addCallback("fromJs", moveLeft);
+			}
+			
+			public function moveRight():void
+			{
+				var mover:Move = new Move();
+				mover.target = aspic;
+				mover.xTo = 424;
+				mover.duration = 2000;
+				mover.addEventListener(EffectEvent.EFFECT_END, callJS);
+				mover.play();
+				
+				rightbtn.enabled = false;
+				
+			}
+			
+			public function moveLeft():void
+			{
+				var mover:Move = new Move()
+				mover.target = aspic;
+				mover.xTo = 0;
+				mover.duration = 2000;
+				mover.addEventListener(EffectEvent.EFFECT_END, btnUse);
+				mover.play();
+			}
+			
+			public function callJS(event:EffectEvent):void
+			{
+				ExternalInterface.call("goright");
+			}
+			
+			public function btnUse(event:EffectEvent):void
+			{
+				rightbtn.enabled = true;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	<mx:Image x="0" y="199" source="@Embed('a.gif')" width="24" height="24" id="aspic"/>
+	<s:Button x="162" y="300" label="-&gt;" buttonMode="true" click="moveRight()" id="rightbtn"/>
+</s:Application>

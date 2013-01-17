@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="484" height="50">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.common.Ccontect;
+			import mx.controls.Alert;
+			import com.common.SimFun;
+			
+			public function buyCarStopFn(event:MouseEvent):void
+			{
+				if(this.parentApplication.current_show_uid != this.parentApplication.myself_uid)
+				{
+					Alert.show("不可以帮朋友买车位！","温馨提示");
+				}
+				else
+				{
+					Ccontect.c2s_buypark(this.parentApplication.loadModules.moduleArr["./modules/gameModule.swf"].now_car_category, Number(order.text), this.parentApplication.current_show_uid);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Image source="images/ico/che_no1.png" buttonMode="true" click="buyCarStopFn(event)"/>	
+	<mx:Image x="44" y="4" source="" id="car_pic" buttonMode="true"/>
+	<!--标记-->
+	<s:Label id="order" visible="false" />
+	<s:Label id="seat_id" visible="false"/>
+	
+	<s:Rect left="0" top="0" width="484" height="50" visible="false" id="maski">
+		<s:fill>
+			<mx:SolidColor color="0xFF0000" alpha="0.5"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+</s:Group>

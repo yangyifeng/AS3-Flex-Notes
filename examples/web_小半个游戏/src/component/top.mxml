@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="760" height="600">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.common.PrintLuck;
+			import com.common.PrintNumber;
+			import com.common.PrintWeather;
+			
+			import flash.filters.DropShadowFilter;
+			import flash.filters.GlowFilter;
+			
+			public function topFn_baseInfo():void
+			{
+				new PrintNumber(top_level_box, this.parentApplication.show_rank);//等级
+				new PrintNumber(top_asse_box, this.parentApplication.show_asse);//资产				
+				new PrintNumber(top_cash_box, this.parentApplication.show_cash);//现金				
+				new PrintLuck(top_luck_box, this.parentApplication.show_luck);//运气指数
+				
+				chenghao.text = this.parentApplication.show_desi;
+			}
+			public function topFn_weather():void
+			{
+				new PrintWeather(top_weather, this.parentApplication.show_weather);//天气
+			}
+			public function topFn_order():void
+			{
+				new PrintNumber(top_rank_box, this.parentApplication.show_order);//排名
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Rect left="0" top="0" width="760" height="90">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="0.01"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	
+	<mx:Image x="48" y="6" width="60" height="60" source="images/ico/touxiang.png"/>	
+	<mx:Image x="51" y="7" width="50" height="50" source="{this.parentApplication.show_picture}"/>	
+	<mx:Image x="115" y="6" width="104" height="57" source="@Embed(source='images/ico/xingming.png')"/>
+	<mx:Image x="79" y="46" source="@Embed(source='images/ico/dengji.png')"/>
+	<mx:Image x="233" y="46" source="@Embed(source='images/ico/qianleft.png')"/>
+	<mx:Image x="394" y="44" source="@Embed(source='images/ico/qianright.png')"/>
+	<s:Label x="150" y="14" id="chenghao" width="71" height="15" filters="{[new GlowFilter(0x000000,0.7)]}" color="0xFFFFFF" verticalAlign="middle"/>
+	<s:Label x="151" y="46" text="{this.parentApplication.show_rolename}" width="71" height="15" filters="{[new GlowFilter(0x000000,0.7)]}" color="0xFFFFFF" verticalAlign="middle"/>
+	<s:HGroup width="106" height="14" gap="0" id="top_asse_box" x="274" y="56"/>
+	<s:HGroup width="106" height="14" gap="0" id="top_cash_box" x="439" y="56"/>
+	<s:HGroup width="20" height="14" gap="-2" id="top_level_box" x="84" y="52"/>
+	<mx:Image x="593" y="8" source="" id="top_weather"/>
+	<s:Rect left="593" top="8" width="55" height="55" id="top_weather_mask" visible="false">
+		<s:fill>
+			<mx:SolidColor color="0xFF0000" alpha="0.5"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<s:HGroup width="106" height="54" gap="0" id="top_luck_box" x="649" y="8"/>
+	<s:Rect left="649" top="8" width="106" height="30" id="top_luck_box_mask" visible="false">
+		<s:fill>
+			<mx:SolidColor color="0xFF0000" alpha="0.5"></mx:SolidColor>
+		</s:fill>		
+	</s:Rect>
+	<mx:Image x="3" y="21" source="@Embed(source='images/ico/paiming.png')" />
+	<s:HGroup width="35" height="14" gap="-3" id="top_rank_box" x="7" y="35"/>
+	
+</s:Group>
